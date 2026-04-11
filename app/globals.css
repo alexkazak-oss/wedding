@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ───────────────────────────────── */
+
+:root {
+  /* Paper & background */
+  --color-cream: #FDFBF7;
+  --color-linen: #F5F0EB;
+  --color-parchment: #F8F4EF;
+
+  /* Typography */
+  --color-ink: #2C2420;
+  --color-ink-light: #6B5E55;
+  --color-ink-muted: #9B8F86;
+
+  /* Accents */
+  --color-gold: #C4A265;
+  --color-gold-light: #D4BC8E;
+  --color-sage: #8B9D83;
+  --color-rose: #C9A0A0;
+  --color-blush: #E8D5D0;
+
+  /* Borders & dividers */
+  --color-border: #E2DCD6;
+  --color-border-light: #EDE8E3;
+
+  /* Shadows — warm-tinted for paper feel */
+  --shadow-card: 0 1px 3px rgba(44, 36, 32, 0.04), 0 8px 32px rgba(44, 36, 32, 0.08);
+  --shadow-card-hover: 0 2px 8px rgba(44, 36, 32, 0.06), 0 16px 48px rgba(44, 36, 32, 0.12);
+  --shadow-subtle: 0 1px 2px rgba(44, 36, 32, 0.04);
+
+  /* Spacing scale */
+  --section-gap: 4rem;
+}
+
+@theme inline {
+  --color-cream: var(--color-cream);
+  --color-linen: var(--color-linen);
+  --color-parchment: var(--color-parchment);
+  --color-ink: var(--color-ink);
+  --color-ink-light: var(--color-ink-light);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-gold: var(--color-gold);
+  --color-gold-light: var(--color-gold-light);
+  --color-sage: var(--color-sage);
+  --color-rose: var(--color-rose);
+  --color-blush: var(--color-blush);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --font-serif: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Base Styles ─────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-linen);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection {
+  background-color: var(--color-blush);
+  color: var(--color-ink);
+}
+
+/* ─── Typography ──────────────────────────────────── */
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+/* ─── Scrollbar (subtle) ──────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
+
+/* ─── Focus Styles ────────────────────────────────── */
+
+:focus-visible {
+  outline: 1.5px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+

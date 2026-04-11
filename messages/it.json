@@ -1,0 +1,97 @@
+{
+	"cover": {
+		"weddingOf": "Matrimonio",
+		"date": "8 settembre 2026",
+		"and": "&",
+		"invitation": "Siamo lieti di invitarvi\nal nostro matrimonio"
+	},
+	"story": {
+		"title": "La nostra storia",
+		"text": "A volte il destino unisce le persone nel momento più inaspettato. La nostra storia è quella di due cuori che si sono trovati e hanno deciso di camminare insieme nella vita."
+	},
+	"timeline": {
+		"title": "Programma"
+	},
+	"venue": {
+		"title": "Location",
+		"howToGet": "Come arrivare"
+	},
+	"dresscode": {
+		"title": "Dress code",
+		"description": "Saremo felici di vedervi in abiti eleganti. Vi preghiamo di attenervi alla seguente palette."
+	},
+	"menu": {
+		"title": "Menu"
+	},
+	"rsvp": {
+		"title": "Conferma",
+		"subtitle": "Per favore confermate la vostra presenza",
+		"accept": "Sarò presente con gioia",
+		"decline": "Purtroppo non potrò",
+		"guestCount": "Numero di ospiti",
+		"comment": "Commento",
+		"commentPlaceholder": "Desideri, allergie, domande...",
+		"submit": "Invia",
+		"thankYou": "Grazie per la vostra risposta!",
+		"alreadyResponded": "Avete già risposto all'invito"
+	},
+	"info": {
+		"title": "Informazioni importanti"
+	},
+	"nav": {
+		"story": "Storia",
+		"timeline": "Programma",
+		"venue": "Location",
+		"dresscode": "Dress code",
+		"menu": "Menu",
+		"rsvp": "RSVP"
+	},
+	"auth": {
+		"login": "Accesso",
+		"loginDescription": "Inserisci l'email indicata nell'invito",
+		"email": "Email",
+		"sendLink": "Invia link",
+		"checkEmail": "Controlla la tua email",
+		"magicLinkSent": "Ti abbiamo inviato un link di accesso"
+	},
+	"cabinet": {
+		"title": "Il tuo invito",
+		"welcome": "Benvenuto",
+		"yourRsvp": "Il tuo RSVP",
+		"guestCount": "Numero di ospiti",
+		"comment": "Commento",
+		"chat": "Scrivi agli organizzatori",
+		"details": "Dettagli dell'evento",
+		"logout": "Esci"
+	},
+	"chat": {
+		"title": "Chat",
+		"placeholder": "Scrivi un messaggio...",
+		"send": "Invia",
+		"noMessages": "Ancora nessun messaggio"
+	},
+	"admin": {
+		"dashboard": "Ospiti",
+		"content": "Contenuto",
+		"chat": "Messaggi",
+		"totalGuests": "Totale",
+		"accepted": "Confermati",
+		"declined": "Rifiutati",
+		"pending": "In attesa",
+		"guestName": "Nome",
+		"email": "Email",
+		"status": "Stato",
+		"guests": "Ospiti",
+		"actions": "Azioni",
+		"save": "Salva",
+		"saved": "Salvato"
+	},
+	"common": {
+		"loading": "Caricamento...",
+		"error": "Si è verificato un errore",
+		"back": "Indietro"
+	},
+	"footer": {
+		"with_love": "Con amore"
+	}
+}
