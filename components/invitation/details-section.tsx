@@ -6,11 +6,11 @@ import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
 const palette = [
-	{ name: 'Ivory', hex: '#F2EDE3' },
-	{ name: 'Sand', hex: '#D9C9A8' },
-	{ name: 'Olive', hex: '#7D7A55' },
-	{ name: 'Slate', hex: '#3D4A4A' },
-	{ name: 'Ink', hex: '#16130F' },
+	{ name: 'Almond Blossom', hex: '#EDBFC6' },
+	{ name: 'Peach Cobbler', hex: '#F4B58A' },
+	{ name: 'Coca Mocha', hex: '#816B5A' },
+	{ name: 'Olive Branch', hex: '#6A6A48' },
+	{ name: 'Chicory Coffee', hex: '#46362F' },
 ]
 
 export function DetailsSection() {

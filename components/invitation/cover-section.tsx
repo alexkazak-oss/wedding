@@ -1,21 +1,32 @@
 'use client'
 
+import { LocaleSwitcher } from '@/components/layout/locale-switcher'
 import { AddToCalendar } from '@/components/ui/add-to-calendar'
 import { Countdown } from '@/components/ui/countdown'
-import { MenuToggle } from '@/components/ui/menu-toggle'
 import { Reveal } from '@/components/ui/reveal'
 import { WEDDING } from '@/lib/constants'
 import { useTranslations } from 'next-intl'
 
 export function CoverSection() {
 	const t = useTranslations('cover')
+	const loc = useTranslations('location')
+
+	const eventTitle = `${t('bride')} & ${t('groom')}`
+	const eventDescription = `${t('headline')} ${WEDDING.domain}`
+	const eventLocation = `${loc('venue')}, ${loc('address')}`
 
 	return (
 		<section className="relative bg-cream">
 			{/* Top bar — safe-area aware */}
 			<div className="safe-top safe-x absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3">
-				<MenuToggle />
-				<AddToCalendar />
+				<AddToCalendar
+					title={eventTitle}
+					description={eventDescription}
+					location={eventLocation}
+					startDate={WEDDING.dateIso}
+					endDate={WEDDING.endDateIso}
+				/>
+				<LocaleSwitcher />
 			</div>
 
 			<div className="relative px-5 xs:px-6 sm:px-12 pt-[clamp(4.5rem,18vw,6.5rem)] pb-12 sm:pb-14">
@@ -90,7 +101,7 @@ export function CoverSection() {
 				{/* Countdown */}
 				<Reveal delay={0.42}>
 					<div className="mt-10 sm:mt-12">
-						<Countdown target={WEDDING.date} />
+						<Countdown target={WEDDING.dateIso} />
 					</div>
 				</Reveal>
 			</div>

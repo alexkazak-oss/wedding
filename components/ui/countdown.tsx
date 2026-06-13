@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
 interface CountdownProps {
-	target: Date | string
+	target: string
 	className?: string
 }
 
@@ -36,19 +36,21 @@ function pad(n: number) {
 
 export function Countdown({ target, className }: CountdownProps) {
 	const t = useTranslations('countdown')
-	const date = typeof target === 'string' ? new Date(target) : target
-	const [parts, setParts] = useState<Parts>(() => diff(date))
+	const [parts, setParts] = useState<Parts | null>(null)
 
 	useEffect(() => {
-		const id = setInterval(() => setParts(diff(date)), 1000)
+		const targetDate = new Date(target)
+		const tick = () => setParts(diff(targetDate))
+		tick()
+		const id = setInterval(tick, 1000)
 		return () => clearInterval(id)
-	}, [date])
+	}, [target])
 
-	const cells: Array<{ value: number; label: string }> = [
-		{ value: parts.days, label: t('days') },
-		{ value: parts.hours, label: t('hours') },
-		{ value: parts.minutes, label: t('minutes') },
-		{ value: parts.seconds, label: t('seconds') },
+	const cells: Array<{ value: number | null; label: string }> = [
+		{ value: parts?.days ?? null, label: t('days') },
+		{ value: parts?.hours ?? null, label: t('hours') },
+		{ value: parts?.minutes ?? null, label: t('minutes') },
+		{ value: parts?.seconds ?? null, label: t('seconds') },
 	]
 
 	return (
@@ -60,13 +62,13 @@ export function Countdown({ target, className }: CountdownProps) {
 				className,
 			)}
 		>
-			{cells.map((c, i) => (
-				<div key={i} className="flex flex-col items-center min-w-0">
+			{cells.map((c) => (
+				<div key={c.label} className="flex flex-col items-center min-w-0">
 					<span
 						className="font-serif text-ink font-light tabular-nums leading-none"
 						style={{ fontSize: 'clamp(1.5rem, 7.5vw, 2.25rem)' }}
 					>
-						{pad(c.value)}
+						{c.value === null ? '——' : pad(c.value)}
 					</span>
 					<span
 						className="mt-2 uppercase text-ink-muted font-sans whitespace-nowrap"

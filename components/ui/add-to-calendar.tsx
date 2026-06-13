@@ -1,27 +1,80 @@
 'use client'
 
-import { downloadIcs } from '@/lib/calendar'
+import { formatGoogleCalendarDate } from '@/lib/calendar'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
 interface AddToCalendarProps {
+	title: string
+	description?: string
+	location?: string
+	startDate: string
+	endDate: string
 	className?: string
 }
 
-export function AddToCalendar({ className }: AddToCalendarProps) {
+function isAndroidUA(ua: string) {
+	return /android/.test(ua)
+}
+
+function buildIcsHref(p: Omit<AddToCalendarProps, 'className'>) {
+	const params = new URLSearchParams({
+		title: p.title,
+		description: p.description ?? '',
+		location: p.location ?? '',
+		start: p.startDate,
+		end: p.endDate,
+	})
+	return `/api/calendar?${params.toString()}`
+}
+
+function buildGoogleHref(p: Omit<AddToCalendarProps, 'className'>) {
+	const params = new URLSearchParams({
+		action: 'TEMPLATE',
+		text: p.title,
+		details: p.description ?? '',
+		location: p.location ?? '',
+		dates: `${formatGoogleCalendarDate(p.startDate)}/${formatGoogleCalendarDate(p.endDate)}`,
+	})
+	return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
+export function AddToCalendar({
+	title,
+	description,
+	location,
+	startDate,
+	endDate,
+	className,
+}: AddToCalendarProps) {
 	const t = useTranslations('cover')
+	const event = { title, description, location, startDate, endDate }
+
+	const handleClick = () => {
+		const ua = navigator.userAgent.toLowerCase()
+
+		if (isAndroidUA(ua)) {
+			window.open(buildGoogleHref(event), '_blank', 'noopener,noreferrer')
+			return
+		}
+
+		// Apple devices and everything else: download .ics
+		// Use location.assign so user can come back via browser back-button
+		window.location.href = buildIcsHref(event)
+	}
 
 	return (
 		<button
 			type="button"
-			onClick={downloadIcs}
+			onClick={handleClick}
 			className={cn(
 				'inline-flex items-center gap-2 rounded-full',
 				'bg-ink text-cream',
 				'px-4 py-2 text-[11px] sm:text-xs',
 				'font-sans tracking-[0.04em]',
 				'hover:bg-ink-light transition-colors',
-				'shadow-[var(--shadow-subtle)]',
+				'shadow-(--shadow-subtle)',
+				'touch-manipulation',
 				className,
 			)}
 			aria-label={t('addToCalendar')}
