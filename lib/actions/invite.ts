@@ -6,37 +6,43 @@ import {
 	setInviteSessionCookie,
 } from '@/lib/invite/cookies'
 import {
-	generateInviteToken,
 	generateSessionToken,
 	hashSession,
 	hashToken,
 	namesMatch,
 } from '@/lib/invite/token'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
-import type { Guest, InviteSnapshot, Locale } from '@/types'
+import type { InviteSnapshot, Locale } from '@/types'
 import { headers } from 'next/headers'
+import config from '@payload-config'
+import { getPayload } from 'payload'
 import { z } from 'zod'
 
-// ─── Helpers ─────────────────────────────────────────
+// ─── Shape of a Payload invite doc ───────────────────
 
-type AdminGate = { ok: true } | { ok: false; error: string }
+export interface PayloadInvite {
+	id: number | string
+	greeting: string
+	displayNames: string
+	firstName: string
+	lastName?: string | null
+	partnerFirstName?: string | null
+	partnerLastName?: string | null
+	locale: Locale
+	maxGuests: number
+	rsvpStatus: 'pending' | 'accepted' | 'declined'
+	guestCount: number
+	comment?: string | null
+	tokenRaw?: string | null
+	tokenHash: string
+	frozenSnapshot?: InviteSnapshot | null
+	openedAt?: string | null
+	lastSeenAt?: string | null
+	createdAt: string
+	updatedAt: string
+}
 
-async function requireAdmin(): Promise<AdminGate> {
-	const supabase = await createClient()
-	const {
-		data: { user },
-	} = await supabase.auth.getUser()
-	if (!user) return { ok: false, error: 'Not authenticated' }
-
-	const { data: me } = await supabase
-		.from('guests')
-		.select('role')
-		.eq('user_id', user.id)
-		.single()
-
-	if (me?.role !== 'admin') return { ok: false, error: 'Forbidden' }
-	return { ok: true }
+async function payload() {
+	return getPayload({ config })
 }
 
 async function readUserAgent() {
@@ -44,173 +50,127 @@ async function readUserAgent() {
 	return h.get('user-agent') ?? null
 }
 
-// ─── Admin: create invitation ────────────────────────
-
-const createInviteSchema = z.object({
-	eventId: z.string().uuid(),
-	greeting: z.string().min(1).max(200),
-	displayNames: z.string().min(1).max(200),
-	firstName: z.string().min(1).max(80),
-	lastName: z.string().max(80).optional().nullable(),
-	partnerFirstName: z.string().max(80).optional().nullable(),
-	partnerLastName: z.string().max(80).optional().nullable(),
-	locale: z.enum(['ru', 'it']),
-	maxGuests: z.number().int().min(1).max(20),
-	email: z.string().email().optional().nullable(),
-})
-
-export type CreateInviteInput = z.infer<typeof createInviteSchema>
-
-export type CreateInviteResult =
-	| { ok: true; guestId: string; token: string }
-	| { ok: false; error: string }
-
-export async function createInvite(input: CreateInviteInput): Promise<CreateInviteResult> {
-	const gate = await requireAdmin()
-	if (!gate.ok) return { ok: false, error: gate.error }
-
-	const parsed = createInviteSchema.safeParse(input)
-	if (!parsed.success) return { ok: false, error: 'Invalid input' }
-
-	const token = generateInviteToken()
-	const tokenHash = hashToken(token)
-
-	const admin = createAdminClient()
-	const { data, error } = await admin
-		.from('guests')
-		.insert({
-			event_id: parsed.data.eventId,
-			name: parsed.data.displayNames,
-			email: parsed.data.email ?? `${token}@invite.local`,
-			invite_token: token,
-			token_hash: tokenHash,
-			greeting: parsed.data.greeting,
-			display_names: parsed.data.displayNames,
-			first_name: parsed.data.firstName,
-			last_name: parsed.data.lastName ?? null,
-			partner_first_name: parsed.data.partnerFirstName ?? null,
-			partner_last_name: parsed.data.partnerLastName ?? null,
-			locale: parsed.data.locale,
-			max_guests: parsed.data.maxGuests,
-			rsvp_status: 'pending',
-			guest_count: 1,
-		})
-		.select('id')
-		.single()
-
-	if (error) return { ok: false, error: error.message }
-
-	return { ok: true, guestId: data.id, token }
-}
-
-// ─── Admin: list invitations ─────────────────────────
-
-export async function listInvites(eventId: string) {
-	const gate = await requireAdmin()
-	if (!gate.ok) return { error: gate.error, invites: null }
-
-	const admin = createAdminClient()
-	const { data, error } = await admin
-		.from('guests')
-		.select(
-			'id, name, display_names, greeting, first_name, last_name, locale, max_guests, invite_token, opened_at, last_seen_at, rsvp_status, guest_count, created_at',
-		)
-		.eq('event_id', eventId)
-		.order('created_at', { ascending: false })
-
-	if (error) return { error: error.message, invites: null }
-	return { invites: data, error: null }
-}
-
 // ─── Public: open invitation by token ────────────────
 
 export type OpenInviteResult =
-	| { state: 'ok'; guest: Guest }
-	| { state: 'verify'; guestId: string; needsLastName: boolean }
+	| { state: 'ok'; invite: PayloadInvite }
+	| { state: 'verify'; inviteId: string | number; needsLastName: boolean }
 	| { state: 'not_found' }
 
 export async function openInviteByToken(rawToken: string): Promise<OpenInviteResult> {
 	const tokenHash = hashToken(rawToken)
-	const admin = createAdminClient()
+	const p = await payload()
 
-	const { data: guest } = await admin
-		.from('guests')
-		.select('*')
-		.eq('token_hash', tokenHash)
-		.single()
+	const found = await p.find({
+		collection: 'invites',
+		where: { tokenHash: { equals: tokenHash } },
+		limit: 1,
+		overrideAccess: true,
+	})
 
-	if (!guest) return { state: 'not_found' }
+	const invite = found.docs[0] as PayloadInvite | undefined
+	if (!invite) return { state: 'not_found' }
 
-	// Check existing session cookie
 	const sessionRaw = await getInviteSessionCookie()
 	if (sessionRaw) {
-		const { data: session } = await admin
-			.from('invite_sessions')
-			.select('id, guest_id')
-			.eq('session_hash', hashSession(sessionRaw))
-			.single()
+		const sessionLookup = await p.find({
+			collection: 'invite-sessions',
+			where: { sessionHash: { equals: hashSession(sessionRaw) } },
+			limit: 1,
+			overrideAccess: true,
+		})
+		const session = sessionLookup.docs[0] as unknown as
+			| { id: string | number; invite: string | number | { id: string | number } }
+			| undefined
 
-		if (session && session.guest_id === guest.id) {
-			await admin.from('invite_sessions').update({ last_seen_at: new Date().toISOString() }).eq('id', session.id)
-			await admin.from('guests').update({ last_seen_at: new Date().toISOString() }).eq('id', guest.id)
-			return { state: 'ok', guest: guest as Guest }
+		if (session) {
+			const sessionInviteId =
+				typeof session.invite === 'object' && session.invite !== null
+					? session.invite.id
+					: session.invite
+
+			if (String(sessionInviteId) === String(invite.id)) {
+				const now = new Date().toISOString()
+				await p.update({
+					collection: 'invite-sessions',
+					id: session.id,
+					data: { lastSeenAt: now },
+					overrideAccess: true,
+				})
+				await p.update({
+					collection: 'invites',
+					id: invite.id,
+					data: { lastSeenAt: now },
+					overrideAccess: true,
+				})
+				return { state: 'ok', invite }
+			}
 		}
 	}
 
-	// No session for this device
-	if (!guest.opened_at) {
-		// First open ever — freeze + create session
-		await freezeAndStartSession(guest as Guest)
-		return { state: 'ok', guest: guest as Guest }
+	if (!invite.openedAt) {
+		const updated = await freezeAndStartSession(invite)
+		return { state: 'ok', invite: updated }
 	}
 
-	// Already opened on another device — verify identity
 	return {
 		state: 'verify',
-		guestId: guest.id,
-		needsLastName: Boolean(guest.last_name),
+		inviteId: invite.id,
+		needsLastName: Boolean(invite.lastName),
 	}
 }
 
-async function freezeAndStartSession(guest: Guest) {
-	const admin = createAdminClient()
+async function freezeAndStartSession(invite: PayloadInvite): Promise<PayloadInvite> {
+	const p = await payload()
 	const now = new Date().toISOString()
 
 	const snapshot: InviteSnapshot = {
-		greeting: guest.greeting ?? '',
-		displayNames: guest.display_names ?? guest.name,
-		maxGuests: guest.max_guests,
-		locale: (guest.locale ?? 'ru') as Locale,
+		greeting: invite.greeting,
+		displayNames: invite.displayNames,
+		maxGuests: invite.maxGuests,
+		locale: invite.locale,
 		openedAt: now,
 	}
 
-	await admin
-		.from('guests')
-		.update({
-			opened_at: now,
-			last_seen_at: now,
-			frozen_snapshot: snapshot,
-		})
-		.eq('id', guest.id)
-
-	await admin.from('invite_access_logs').insert({
-		guest_id: guest.id,
-		event: 'opened',
-		user_agent: await readUserAgent(),
+	const updated = await p.update({
+		collection: 'invites',
+		id: invite.id,
+		data: {
+			openedAt: now,
+			lastSeenAt: now,
+			frozenSnapshot: snapshot,
+		},
+		overrideAccess: true,
 	})
 
-	await issueSessionCookie(guest.id)
+	await p.create({
+		collection: 'invite-access-logs',
+		data: {
+			invite: invite.id,
+			event: 'opened',
+			userAgent: await readUserAgent(),
+		},
+		overrideAccess: true,
+	})
+
+	await issueSessionCookie(invite.id)
+	return updated as unknown as PayloadInvite
 }
 
-async function issueSessionCookie(guestId: string) {
-	const admin = createAdminClient()
+async function issueSessionCookie(inviteId: string | number) {
+	const p = await payload()
 	const raw = generateSessionToken()
 	const hash = hashSession(raw)
 
-	await admin.from('invite_sessions').insert({
-		guest_id: guestId,
-		session_hash: hash,
-		user_agent: await readUserAgent(),
+	await p.create({
+		collection: 'invite-sessions',
+		data: {
+			invite: inviteId,
+			sessionHash: hash,
+			userAgent: await readUserAgent(),
+			lastSeenAt: new Date().toISOString(),
+		},
+		overrideAccess: true,
 	})
 
 	await setInviteSessionCookie(raw)
@@ -219,77 +179,87 @@ async function issueSessionCookie(guestId: string) {
 // ─── Public: verify by first/last name ───────────────
 
 const verifySchema = z.object({
-	guestId: z.string().uuid(),
+	inviteId: z.union([z.string(), z.number()]),
 	firstName: z.string().min(1).max(80),
 	lastName: z.string().max(80).optional(),
 })
 
 export async function verifyGuestByName(input: {
-	guestId: string
+	inviteId: string | number
 	firstName: string
 	lastName?: string
 }) {
 	const parsed = verifySchema.safeParse(input)
 	if (!parsed.success) return { ok: false as const, error: 'Invalid input' }
 
-	const admin = createAdminClient()
-	const { data: guest } = await admin
-		.from('guests')
-		.select('id, first_name, last_name, partner_first_name, partner_last_name')
-		.eq('id', parsed.data.guestId)
-		.single()
+	const p = await payload()
+	const found = (await p.findByID({
+		collection: 'invites',
+		id: parsed.data.inviteId,
+		overrideAccess: true,
+	})) as unknown as PayloadInvite | null
 
-	if (!guest) return { ok: false as const, error: 'Not found' }
+	if (!found) return { ok: false as const, error: 'Not found' }
 
-	const candidates: Array<{ first: string; last: string | null }> = []
-	if (guest.first_name) candidates.push({ first: guest.first_name, last: guest.last_name })
-	if (guest.partner_first_name)
-		candidates.push({ first: guest.partner_first_name, last: guest.partner_last_name })
+	const candidates: Array<{ first: string; last: string | null }> = [
+		{ first: found.firstName, last: found.lastName ?? null },
+	]
+	if (found.partnerFirstName) {
+		candidates.push({ first: found.partnerFirstName, last: found.partnerLastName ?? null })
+	}
 
-	const input_name = { first: parsed.data.firstName, last: parsed.data.lastName ?? null }
-	const matched = candidates.some((c) => namesMatch(c, input_name))
+	const inputName = { first: parsed.data.firstName, last: parsed.data.lastName ?? null }
+	const matched = candidates.some((c) => namesMatch(c, inputName))
 
 	if (!matched) {
-		await admin.from('invite_access_logs').insert({
-			guest_id: guest.id,
-			event: 'verify_failed',
-			user_agent: await readUserAgent(),
+		await p.create({
+			collection: 'invite-access-logs',
+			data: { invite: found.id, event: 'verify_failed', userAgent: await readUserAgent() },
+			overrideAccess: true,
 		})
 		return { ok: false as const, error: 'Имя не совпало с приглашением' }
 	}
 
-	await admin.from('invite_access_logs').insert({
-		guest_id: guest.id,
-		event: 'verify_ok',
-		user_agent: await readUserAgent(),
+	await p.create({
+		collection: 'invite-access-logs',
+		data: { invite: found.id, event: 'verify_ok', userAgent: await readUserAgent() },
+		overrideAccess: true,
 	})
 
-	await issueSessionCookie(guest.id)
+	await issueSessionCookie(found.id)
 	return { ok: true as const }
 }
 
-// ─── Public: read current session ────────────────────
+// ─── Public: read current invite via cookie ──────────
 
-export async function getCurrentInvite(): Promise<Guest | null> {
+export async function getCurrentInvite(): Promise<PayloadInvite | null> {
 	const sessionRaw = await getInviteSessionCookie()
 	if (!sessionRaw) return null
 
-	const admin = createAdminClient()
-	const { data: session } = await admin
-		.from('invite_sessions')
-		.select('guest_id')
-		.eq('session_hash', hashSession(sessionRaw))
-		.single()
-
+	const p = await payload()
+	const sessionLookup = await p.find({
+		collection: 'invite-sessions',
+		where: { sessionHash: { equals: hashSession(sessionRaw) } },
+		limit: 1,
+		overrideAccess: true,
+	})
+	const session = sessionLookup.docs[0] as unknown as
+		| { invite: string | number | { id: string | number } }
+		| undefined
 	if (!session) return null
 
-	const { data: guest } = await admin
-		.from('guests')
-		.select('*')
-		.eq('id', session.guest_id)
-		.single()
+	const inviteId =
+		typeof session.invite === 'object' && session.invite !== null
+			? session.invite.id
+			: session.invite
 
-	return (guest as Guest | null) ?? null
+	const invite = (await p.findByID({
+		collection: 'invites',
+		id: inviteId,
+		overrideAccess: true,
+	})) as unknown as PayloadInvite | null
+
+	return invite ?? null
 }
 
 export async function signOutInvite() {

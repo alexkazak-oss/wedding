@@ -17,7 +17,7 @@ export function AdminShell({ children, guest }: AdminShellProps) {
 
 	const navItems = [
 		{ href: '/dashboard', label: t('dashboard'), icon: '👥' },
-		{ href: '/invites', label: 'Приглашения', icon: '✉' },
+		{ href: '/admin', label: 'Приглашения', icon: '✉' },
 		{ href: '/content', label: t('content'), icon: '📝' },
 		{ href: '/chat', label: t('chat'), icon: '💬' },
 	]

@@ -38,16 +38,14 @@ export default async function InvitePage({
 						Это приглашение уже открывали на другом устройстве. Введите имя
 						{result.needsLastName ? ' и фамилию' : ''}, чтобы продолжить.
 					</p>
-					<VerifyForm guestId={result.guestId} needsLastName={result.needsLastName} />
+					<VerifyForm inviteId={result.inviteId} needsLastName={result.needsLastName} />
 				</section>
 			</InvitationCard>
 		)
 	}
 
-	// state === 'ok' — render personalized invitation
-	const { guest } = result
-	const snapshot = guest.frozen_snapshot
-	const greeting = snapshot?.greeting ?? guest.greeting ?? null
+	const { invite } = result
+	const greeting = invite.frozenSnapshot?.greeting ?? invite.greeting
 
 	return (
 		<InvitationCard>

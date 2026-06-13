@@ -5,11 +5,11 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface VerifyFormProps {
-	guestId: string
+	inviteId: string | number
 	needsLastName: boolean
 }
 
-export function VerifyForm({ guestId, needsLastName }: VerifyFormProps) {
+export function VerifyForm({ inviteId, needsLastName }: VerifyFormProps) {
 	const router = useRouter()
 	const [first, setFirst] = useState('')
 	const [last, setLast] = useState('')
@@ -21,7 +21,7 @@ export function VerifyForm({ guestId, needsLastName }: VerifyFormProps) {
 		setError(null)
 		startTransition(async () => {
 			const result = await verifyGuestByName({
-				guestId,
+				inviteId,
 				firstName: first,
 				lastName: needsLastName ? last : undefined,
 			})

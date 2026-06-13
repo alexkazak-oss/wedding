@@ -44,46 +44,15 @@ export interface Guest {
 	comment: string | null
 	role: UserRole
 	created_at: string
-
-	// Personal invitation extension
-	greeting: string | null
-	display_names: string | null
-	first_name: string | null
-	last_name: string | null
-	partner_first_name: string | null
-	partner_last_name: string | null
-	locale: Locale
-	max_guests: number
-	token_hash: string | null
-	frozen_snapshot: InviteSnapshot | null
-	opened_at: string | null
-	last_seen_at: string | null
 }
 
+// Personal invitations now live in Payload; shapes are in lib/actions/invite.ts.
 export interface InviteSnapshot {
 	greeting: string
 	displayNames: string
 	maxGuests: number
 	locale: Locale
 	openedAt: string
-}
-
-export interface InviteSession {
-	id: string
-	guest_id: string
-	session_hash: string
-	user_agent: string | null
-	created_at: string
-	last_seen_at: string
-}
-
-export interface InviteAccessLog {
-	id: string
-	guest_id: string
-	event: string
-	user_agent: string | null
-	ip: string | null
-	created_at: string
 }
 
 export interface ContentBlock {
