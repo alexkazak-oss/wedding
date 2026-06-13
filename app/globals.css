@@ -50,6 +50,7 @@
   --font-serif: "Cormorant Garamond", "Times New Roman", Georgia, serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-script: "Marck Script", "Cormorant Garamond", cursive;
+  --font-signature: "Monsieur La Doulaise", "Marck Script", cursive;
 }
 
 /* ─── Base Styles ─────────────────────────────────── */
@@ -100,6 +101,12 @@ h1, h2, h3, h4 {
 
 .font-script {
   font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.font-signature {
+  font-family: var(--font-signature);
   font-weight: 400;
   letter-spacing: 0;
 }

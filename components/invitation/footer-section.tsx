@@ -13,7 +13,7 @@ export function FooterSection() {
 			style={{ paddingBottom: 'max(3.5rem, env(safe-area-inset-bottom))' }}
 		>
 			<Reveal variant="fadeIn">
-				<p className="font-script text-4xl sm:text-5xl text-ink leading-[1.05]">
+				<p className="font-signature text-ink leading-[1.05]" style={{ fontSize: 'clamp(2.75rem, 11vw, 4.5rem)' }}>
 					{t('signature')}
 				</p>
 
