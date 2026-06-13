@@ -6,11 +6,14 @@ import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
 const palette = [
-	{ name: 'Almond Blossom', hex: '#EDBFC6' },
+	{ name: 'Pastel Yellow', hex: '#EFE6B4' },
+	{ name: 'Winter Pear', hex: '#B3B490' },
 	{ name: 'Peach Cobbler', hex: '#F4B58A' },
-	{ name: 'Coca Mocha', hex: '#816B5A' },
 	{ name: 'Olive Branch', hex: '#6A6A48' },
-	{ name: 'Chicory Coffee', hex: '#46362F' },
+	{ name: 'Almond Blossom', hex: '#46362F' },
+	{ name: 'Dusty Rose', hex: '#B37D7F' },
+	{ name: 'Morron Terracotta', hex: '#845540' },
+	{ name: 'Chocolate Lab', hex: '#573F36' },
 ]
 
 export function DetailsSection() {

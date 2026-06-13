@@ -1,20 +1,67 @@
-import { InvitationCard } from '@/components/layout/invitation-card';
-import { InviteHandler } from '@/components/auth/invite-handler';
-import { setRequestLocale } from 'next-intl/server';
+import {
+	CoverSection,
+	DetailsSection,
+	FooterSection,
+	GreetingSection,
+	LocationSection,
+	TimingSection,
+} from '@/components/invitation'
+import { InvitationCard } from '@/components/layout/invitation-card'
+import { VerifyForm } from '@/components/invite/verify-form'
+import { Divider } from '@/components/ui/divider'
+import { openInviteByToken } from '@/lib/actions/invite'
+import { notFound } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
 
 export default async function InvitePage({
-  params,
+	params,
 }: {
-  params: Promise<{ locale: string; token: string }>;
+	params: Promise<{ locale: string; token: string }>
 }) {
-  const { locale, token } = await params;
-  setRequestLocale(locale);
+	const { locale, token } = await params
+	setRequestLocale(locale)
 
-  return (
-    <InvitationCard>
-      <div className="px-8 sm:px-12 py-20 min-h-[60vh] flex items-center justify-center">
-        <InviteHandler token={token} />
-      </div>
-    </InvitationCard>
-  );
+	const result = await openInviteByToken(token)
+
+	if (result.state === 'not_found') {
+		notFound()
+	}
+
+	if (result.state === 'verify') {
+		return (
+			<InvitationCard>
+				<section className="px-6 sm:px-12 pt-20 pb-16 min-h-[80vh] flex flex-col items-center justify-center text-center">
+					<h2 className="font-serif text-2xl sm:text-3xl text-ink mb-4 tracking-wide">
+						Подтвердите личность
+					</h2>
+					<p className="text-sm text-ink-light font-sans max-w-sm mb-10 leading-[1.7]">
+						Это приглашение уже открывали на другом устройстве. Введите имя
+						{result.needsLastName ? ' и фамилию' : ''}, чтобы продолжить.
+					</p>
+					<VerifyForm guestId={result.guestId} needsLastName={result.needsLastName} />
+				</section>
+			</InvitationCard>
+		)
+	}
+
+	// state === 'ok' — render personalized invitation
+	const { guest } = result
+	const snapshot = guest.frozen_snapshot
+	const greeting = snapshot?.greeting ?? guest.greeting ?? null
+
+	return (
+		<InvitationCard>
+			<CoverSection />
+			<Divider ornament />
+			<GreetingSection overrideTitle={greeting} />
+			<Divider ornament />
+			<LocationSection />
+			<Divider ornament />
+			<TimingSection />
+			<Divider ornament />
+			<DetailsSection />
+			<Divider ornament />
+			<FooterSection />
+		</InvitationCard>
+	)
 }

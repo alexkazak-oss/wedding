@@ -14,7 +14,7 @@ export const WEDDING = {
 	location: 'Беларусь',
 	mapUrl: 'https://maps.google.com/?q=Dwor+Stajki+Вилейский+район+Стайки',
 	organizer: {
-		name: 'Алеся',
+		name: 'Алесей',
 		phone: '+375 44 781 8283',
 		telegram: 'https://t.me/valuyevaa',
 		telegramLabel: '@valuyevaa',

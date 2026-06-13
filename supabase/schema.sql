@@ -2,8 +2,9 @@
 -- ║  Wedding Invitation App — Database Schema           ║
 -- ╚══════════════════════════════════════════════════════╝
 
--- Enable UUID generation
+-- Enable UUID generation + pgcrypto for gen_random_bytes / digest
 create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
 -- ─── Events ─────────────────────────────────────────
 
@@ -45,6 +46,74 @@ create table public.guests (
 create index idx_guests_event on public.guests(event_id);
 create index idx_guests_user on public.guests(user_id);
 create index idx_guests_token on public.guests(invite_token);
+
+-- ─── Personal Invitation Fields (extends guests) ──────
+
+alter table public.guests
+  add column if not exists greeting         text,
+  add column if not exists display_names    text,
+  add column if not exists first_name       text,
+  add column if not exists last_name        text,
+  add column if not exists partner_first_name text,
+  add column if not exists partner_last_name  text,
+  add column if not exists locale           text not null default 'ru',
+  add column if not exists max_guests       int  not null default 1,
+  add column if not exists token_hash       text unique,
+  add column if not exists frozen_snapshot  jsonb,
+  add column if not exists opened_at        timestamptz,
+  add column if not exists last_seen_at     timestamptz;
+
+create index if not exists idx_guests_token_hash on public.guests(token_hash);
+
+-- ─── Invite Sessions (per-device cookies) ──────────────
+
+create table if not exists public.invite_sessions (
+  id            uuid primary key default uuid_generate_v4(),
+  guest_id      uuid not null references public.guests(id) on delete cascade,
+  session_hash  text unique not null,
+  user_agent    text,
+  created_at    timestamptz not null default now(),
+  last_seen_at  timestamptz not null default now()
+);
+
+create index if not exists idx_invite_sessions_guest on public.invite_sessions(guest_id);
+create index if not exists idx_invite_sessions_hash  on public.invite_sessions(session_hash);
+
+-- ─── Invite Access Logs (audit trail) ─────────────────
+
+create table if not exists public.invite_access_logs (
+  id          uuid primary key default uuid_generate_v4(),
+  guest_id    uuid not null references public.guests(id) on delete cascade,
+  event       text not null,
+  user_agent  text,
+  ip          text,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists idx_invite_access_logs_guest on public.invite_access_logs(guest_id);
+create index if not exists idx_invite_access_logs_created on public.invite_access_logs(created_at desc);
+
+alter table public.invite_sessions    enable row level security;
+alter table public.invite_access_logs enable row level security;
+
+-- Sessions / access logs: only admins can read directly
+create policy "Admins can read sessions"
+  on public.invite_sessions for select
+  using (
+    exists (
+      select 1 from public.guests g
+      where g.user_id = auth.uid() and g.role = 'admin'
+    )
+  );
+
+create policy "Admins can read access logs"
+  on public.invite_access_logs for select
+  using (
+    exists (
+      select 1 from public.guests g
+      where g.user_id = auth.uid() and g.role = 'admin'
+    )
+  );
 
 -- ─── Content Blocks ─────────────────────────────────
 
