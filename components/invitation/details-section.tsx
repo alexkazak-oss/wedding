@@ -55,6 +55,9 @@ export function DetailsSection() {
 				<p className="mt-12 mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
 					{t('giftsText')}
 				</p>
+				<p className="mt-4 mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
+					{t('giftsText2')}
+				</p>
 			</Reveal>
 
 			{/* Organizer */}
