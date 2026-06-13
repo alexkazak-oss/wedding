@@ -1,23 +1,33 @@
 'use client'
 
 import { Reveal } from '@/components/ui/reveal'
+import { WEDDING } from '@/lib/constants'
 import { useTranslations } from 'next-intl'
 
 export function FooterSection() {
-	const t = useTranslations('footer')
+	const cover = useTranslations('cover')
+	const t = useTranslations()
 
 	return (
-		<footer className="px-8 sm:px-12 py-12 text-center">
+		<footer className="px-6 sm:px-12 pt-10 pb-14 text-center safe-x"
+			style={{ paddingBottom: 'max(3.5rem, env(safe-area-inset-bottom))' }}
+		>
 			<Reveal variant="fadeIn">
-				<div className="space-y-4">
-					<div className="text-gold-light text-sm tracking-[0.5em]">✦</div>
-					<p className="font-serif text-xl text-ink tracking-wide">
-						Alessandro & Anastasia
+				<p className="font-script text-4xl sm:text-5xl text-ink leading-[1.05]">
+					{t('signature')}
+				</p>
+
+				<div className="mt-7 flex items-center justify-center gap-3">
+					<span className="h-px w-10 bg-ink/30" />
+					<p className="font-serif text-base text-ink tracking-wider">
+						{cover('bride')} <span className="font-script text-xl align-middle">{cover('and')}</span> {cover('groom')}
 					</p>
-					<p className="text-[10px] uppercase tracking-[0.3em] text-ink-muted font-sans">
-						{t('with_love')}
-					</p>
+					<span className="h-px w-10 bg-ink/30" />
 				</div>
+
+				<p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-ink-muted font-sans">
+					{WEDDING.domain}
+				</p>
 			</Reveal>
 		</footer>
 	)

@@ -16,6 +16,7 @@ export function InvitationCard({ children, className }: InvitationCardProps) {
 					'sm:shadow-[var(--shadow-card)]',
 					'sm:rounded-sm',
 					'min-h-screen sm:min-h-0',
+					'overflow-hidden',
 					className,
 				)}
 			>

@@ -4,30 +4,30 @@
 
 :root {
   /* Paper & background */
-  --color-cream: #FDFBF7;
-  --color-linen: #F5F0EB;
-  --color-parchment: #F8F4EF;
+  --color-cream: #F5F1EA;
+  --color-linen: #ECE6DC;
+  --color-parchment: #EFEAE2;
 
   /* Typography */
-  --color-ink: #2C2420;
-  --color-ink-light: #6B5E55;
-  --color-ink-muted: #9B8F86;
+  --color-ink: #16130F;
+  --color-ink-light: #4A423B;
+  --color-ink-muted: #8A8077;
 
-  /* Accents */
-  --color-gold: #C4A265;
-  --color-gold-light: #D4BC8E;
+  /* Accents — kept for compatibility but tuned to greyscale */
+  --color-gold: #6F6258;
+  --color-gold-light: #A89D91;
   --color-sage: #8B9D83;
   --color-rose: #C9A0A0;
   --color-blush: #E8D5D0;
 
   /* Borders & dividers */
-  --color-border: #E2DCD6;
-  --color-border-light: #EDE8E3;
+  --color-border: #D8D1C5;
+  --color-border-light: #E4DED3;
 
-  /* Shadows — warm-tinted for paper feel */
-  --shadow-card: 0 1px 3px rgba(44, 36, 32, 0.04), 0 8px 32px rgba(44, 36, 32, 0.08);
-  --shadow-card-hover: 0 2px 8px rgba(44, 36, 32, 0.06), 0 16px 48px rgba(44, 36, 32, 0.12);
-  --shadow-subtle: 0 1px 2px rgba(44, 36, 32, 0.04);
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(22, 19, 15, 0.04), 0 12px 40px rgba(22, 19, 15, 0.10);
+  --shadow-card-hover: 0 2px 8px rgba(22, 19, 15, 0.06), 0 20px 56px rgba(22, 19, 15, 0.14);
+  --shadow-subtle: 0 1px 2px rgba(22, 19, 15, 0.04);
 
   /* Spacing scale */
   --section-gap: 4rem;
@@ -49,6 +49,7 @@
   --color-border-light: var(--color-border-light);
   --font-serif: "Cormorant Garamond", "Times New Roman", Georgia, serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-script: "Marck Script", "Cormorant Garamond", cursive;
 }
 
 /* ─── Base Styles ─────────────────────────────────── */
@@ -57,6 +58,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -64,11 +67,25 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+section[id] {
+  scroll-margin-top: 4rem;
+}
+
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }
 
 ::selection {
-  background-color: var(--color-blush);
-  color: var(--color-ink);
+  background-color: var(--color-ink);
+  color: var(--color-cream);
 }
 
 /* ─── Typography ──────────────────────────────────── */
@@ -77,11 +94,17 @@ h1, h2, h3, h4 {
   font-family: var(--font-serif);
   font-weight: 300;
   letter-spacing: 0.02em;
-  line-height: 1.2;
+  line-height: 1.1;
   color: var(--color-ink);
 }
 
-/* ─── Scrollbar (subtle) ──────────────────────────── */
+.font-script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ─── Scrollbar ───────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 4px;
@@ -103,8 +126,7 @@ h1, h2, h3, h4 {
 /* ─── Focus Styles ────────────────────────────────── */
 
 :focus-visible {
-  outline: 1.5px solid var(--color-gold);
+  outline: 1.5px solid var(--color-ink);
   outline-offset: 2px;
   border-radius: 2px;
 }
-

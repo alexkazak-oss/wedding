@@ -1,7 +1,7 @@
 import { routing } from '@/lib/i18n/routing'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
-import { Cormorant_Garamond, Inter } from 'next/font/google'
+import { Cormorant_Garamond, Inter, Marck_Script } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
 const cormorant = Cormorant_Garamond({
@@ -15,6 +15,13 @@ const inter = Inter({
 	subsets: ['latin', 'cyrillic'],
 	weight: ['300', '400', '500'],
 	variable: '--font-sans',
+	display: 'swap',
+})
+
+const marckScript = Marck_Script({
+	subsets: ['latin', 'cyrillic'],
+	weight: '400',
+	variable: '--font-script',
 	display: 'swap',
 })
 
@@ -40,7 +47,7 @@ export default async function LocaleLayout({
 	const messages = await getMessages()
 
 	return (
-		<html lang={locale} className={`${cormorant.variable} ${inter.variable}`} data-scroll-behavior="smooth">
+		<html lang={locale} className={`${cormorant.variable} ${inter.variable} ${marckScript.variable}`} data-scroll-behavior="smooth">
 			<body className="min-h-screen antialiased">
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					{children}

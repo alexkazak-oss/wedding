@@ -1,84 +1,99 @@
 'use client'
 
-import { LocaleSwitcher } from '@/components/layout/locale-switcher'
-import { Divider } from '@/components/ui/divider'
+import { AddToCalendar } from '@/components/ui/add-to-calendar'
+import { Countdown } from '@/components/ui/countdown'
+import { MenuToggle } from '@/components/ui/menu-toggle'
 import { Reveal } from '@/components/ui/reveal'
+import { WEDDING } from '@/lib/constants'
 import { useTranslations } from 'next-intl'
 
 export function CoverSection() {
 	const t = useTranslations('cover')
 
 	return (
-		<section className="relative flex flex-col items-center justify-center text-center px-8 pt-16 pb-12 sm:pt-24 sm:pb-16 min-h-[80vh] sm:min-h-[600px]">
-			{/* Language switcher */}
-			<div className="absolute top-6 right-6">
-				<LocaleSwitcher />
+		<section className="relative bg-cream">
+			{/* Top bar — safe-area aware */}
+			<div className="safe-top safe-x absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3">
+				<MenuToggle />
+				<AddToCalendar />
 			</div>
 
-			{/* Top ornament */}
-			<Reveal variant="fadeIn">
-				<div className="text-gold-light text-2xl mb-8 tracking-[0.5em]">✦ ✦ ✦</div>
-			</Reveal>
+			<div className="relative px-5 xs:px-6 sm:px-12 pt-[clamp(4.5rem,18vw,6.5rem)] pb-12 sm:pb-14">
+				{/* Vertical date stack — top-right */}
+				<Reveal variant="fadeIn">
+					<div className="flex justify-start">
+						<div className="flex items-stretch gap-4 sm:gap-6">
+							<div className="w-px bg-ink/80 self-stretch" />
+							<div
+								className="font-serif text-ink leading-[1.15] tracking-wide font-light text-right"
+								style={{ fontSize: 'clamp(1.5rem, 6vw, 1.875rem)' }}
+							>
+								<div>{t('day')}</div>
+								<div>{t('month')}</div>
+								<div>{t('year')}</div>
+							</div>
+						</div>
+					</div>
+				</Reveal>
 
-			{/* Wedding of label */}
-			<Reveal variant="fadeIn" delay={0.1}>
-				<p className="text-xs uppercase tracking-[0.3em] text-ink-muted font-sans mb-6">
-					{t('weddingOf')}
-				</p>
-			</Reveal>
+				{/* Names */}
+				<div className="mt-8 sm:mt-14 text-center">
+					<Reveal delay={0.05}>
+						<h1
+							className="font-serif font-light text-ink uppercase tracking-[0.01em] leading-[1.02] wrap-break-word"
+							style={{ fontSize: 'clamp(2rem, 9.5vw, 4.5rem)' }}
+						>
+							{t('bride')}
+						</h1>
+					</Reveal>
 
-			{/* Names */}
-			<Reveal delay={0.2}>
-				<h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-light text-ink leading-[1.1] tracking-wide">
-					Alessandro
-				</h1>
-			</Reveal>
+					<Reveal delay={0.12}>
+						<p
+							className="font-script text-ink/85 leading-none my-1 sm:my-2"
+							style={{ fontSize: 'clamp(1.75rem, 7vw, 2.5rem)' }}
+							aria-hidden="true"
+						>
+							{t('and')}
+						</p>
+					</Reveal>
 
-			<Reveal delay={0.3}>
-				<p className="font-serif text-3xl sm:text-4xl text-gold my-3 font-light">
-					{t('and')}
-				</p>
-			</Reveal>
-
-			<Reveal delay={0.4}>
-				<h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-light text-ink leading-[1.1] tracking-wide">
-					Anastasia
-				</h1>
-			</Reveal>
-
-			{/* Date */}
-			<Reveal delay={0.5}>
-				<div className="mt-10">
-					<Divider ornament className="py-6" />
-					<p className="text-sm uppercase tracking-[0.25em] text-ink-light font-sans">
-						{t('date')}
-					</p>
+					<Reveal delay={0.18}>
+						<h1
+							className="font-serif font-light text-ink uppercase tracking-[0.01em] leading-[1.02] wrap-break-word"
+							style={{ fontSize: 'clamp(2rem, 9.5vw, 4.5rem)' }}
+						>
+							{t('groom')}
+						</h1>
+					</Reveal>
 				</div>
-			</Reveal>
 
-			{/* Invitation text */}
-			<Reveal delay={0.6}>
-				<p className="mt-8 text-ink-muted text-sm leading-relaxed font-sans whitespace-pre-line max-w-xs">
-					{t('invitation')}
-				</p>
-			</Reveal>
-
-			{/* Scroll hint */}
-			<Reveal delay={0.8} variant="fadeIn">
-				<div className="mt-12 animate-bounce">
-					<svg
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1"
-						className="text-ink-muted/40"
+				{/* "Мы женимся!" — bold */}
+				<Reveal delay={0.28}>
+					<p
+						className="mt-9 sm:mt-10 text-center font-serif font-semibold text-ink tracking-wide"
+						style={{ fontSize: 'clamp(1.5rem, 5.5vw, 1.875rem)' }}
 					>
-						<path d="M12 5v14M19 12l-7 7-7-7" />
-					</svg>
-				</div>
-			</Reveal>
+						{t('headline')}
+					</p>
+				</Reveal>
+
+				{/* Date 08.09.2026 */}
+				<Reveal delay={0.34}>
+					<p
+						className="mt-3 text-center text-ink-light font-sans"
+						style={{ fontSize: 'clamp(0.8rem, 3.2vw, 1rem)', letterSpacing: '0.28em' }}
+					>
+						{t('dateShort')}
+					</p>
+				</Reveal>
+
+				{/* Countdown */}
+				<Reveal delay={0.42}>
+					<div className="mt-10 sm:mt-12">
+						<Countdown target={WEDDING.date} />
+					</div>
+				</Reveal>
+			</div>
 		</section>
 	)
 }

@@ -244,5 +244,5 @@ values (
   'Vladislava',
   'Усадьба Богдановичей',
   'Villa Bogdanovich',
-  'Via Via, 34, Minsk Belarus'
+  'Адрес: д. Стайки, 20, Minsk Belarus'
 );

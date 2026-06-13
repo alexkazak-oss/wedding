@@ -8,10 +8,8 @@ interface DividerProps {
 export function Divider({ className, ornament = false }: DividerProps) {
   if (ornament) {
     return (
-      <div className={cn('flex items-center justify-center gap-4 py-8', className)}>
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-gold text-lg leading-none">✦</span>
-        <span className="h-px flex-1 bg-border" />
+      <div className={cn('flex items-center justify-center py-6', className)}>
+        <span className="h-px w-12 bg-ink/40" />
       </div>
     );
   }

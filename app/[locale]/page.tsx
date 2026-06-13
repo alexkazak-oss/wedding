@@ -2,13 +2,10 @@ import { InvitationCard } from '@/components/layout/invitation-card';
 import { Divider } from '@/components/ui/divider';
 import {
   CoverSection,
-  StorySection,
-  TimelineSection,
-  VenueSection,
-  DressCodeSection,
-  MenuSection,
-  RsvpSection,
-  InfoSection,
+  GreetingSection,
+  LocationSection,
+  TimingSection,
+  DetailsSection,
   FooterSection,
 } from '@/components/invitation';
 import { setRequestLocale } from 'next-intl/server';
@@ -25,20 +22,14 @@ export default async function InvitationPage({
     <InvitationCard>
       <CoverSection />
       <Divider ornament />
-      <StorySection />
+      <GreetingSection />
       <Divider ornament />
-      <TimelineSection />
+      <LocationSection />
       <Divider ornament />
-      <VenueSection />
+      <TimingSection />
       <Divider ornament />
-      <DressCodeSection />
+      <DetailsSection />
       <Divider ornament />
-      <MenuSection />
-      <Divider ornament />
-      <RsvpSection />
-      <Divider ornament />
-      <InfoSection />
-      <Divider />
       <FooterSection />
     </InvitationCard>
   );

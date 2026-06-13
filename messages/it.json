@@ -1,50 +1,58 @@
 {
+	"meta": {
+		"title": "Vladislava e Aleksandr · 08.09.2026",
+		"description": "Ci sposiamo! Vi invitiamo al nostro matrimonio l'8 settembre 2026"
+	},
 	"cover": {
-		"weddingOf": "Matrimonio",
-		"date": "8 settembre 2026",
-		"and": "&",
-		"invitation": "Siamo lieti di invitarvi\nal nostro matrimonio"
+		"bride": "Vladislava",
+		"groom": "Aleksandr",
+		"and": "and",
+		"day": "08",
+		"month": "09",
+		"year": "26",
+		"headline": "Ci sposiamo!",
+		"dateShort": "08.09.2026",
+		"addToCalendar": "Aggiungi al calendario"
 	},
-	"story": {
-		"title": "La nostra storia",
-		"text": "A volte il destino unisce le persone nel momento più inaspettato. La nostra storia è quella di due cuori che si sono trovati e hanno deciso di camminare insieme nella vita."
+	"countdown": {
+		"days": "giorni",
+		"hours": "ore",
+		"minutes": "minuti",
+		"seconds": "secondi"
 	},
-	"timeline": {
-		"title": "Programma"
+	"greeting": {
+		"title": "Cari ospiti!",
+		"text": "Senza di voi il nostro matrimonio non sarà così sentito e memorabile. Vi invitiamo a condividere questo giorno insieme a noi."
 	},
-	"venue": {
+	"location": {
 		"title": "Location",
-		"howToGet": "Come arrivare"
+		"venue": "DWOR STAJKI",
+		"address": "Distretto di Vileika, villaggio Stajki 20",
+		"mapButton": "Vedi sulla mappa"
 	},
-	"dresscode": {
-		"title": "Dress code",
-		"description": "Saremo felici di vedervi in abiti eleganti. Vi preghiamo di attenervi alla seguente palette."
+	"timing": {
+		"title": "Programma",
+		"items": [
+			{ "time": "15:00", "label": "arrivo degli ospiti" },
+			{ "time": "16:00", "label": "cerimonia" },
+			{ "time": "17:00", "label": "banchetto" },
+			{ "time": "23:00", "label": "finale" }
+		]
 	},
-	"menu": {
-		"title": "Menu"
+	"details": {
+		"title": "Dettagli",
+		"dresscodeTitle": "Dress code",
+		"dresscodeText": "Vi saremo grati se sosterrete la palette di colori della nostra festa nei vostri abiti.",
+		"giftsText": "Per avere le mani libere per gli abbracci, saremo felici di regali leggeri in busta. Vi preghiamo di non regalarci fiori — un'ottima aggiunta sarà una bottiglia della vostra bevanda preferita con i vostri caldi auguri.",
+		"organizerIntro": "Se avete domande o problemi, potete contattare la nostra meravigliosa organizzatrice",
+		"organizerName": "Alesya"
 	},
-	"rsvp": {
-		"title": "Conferma",
-		"subtitle": "Per favore confermate la vostra presenza",
-		"accept": "Sarò presente con gioia",
-		"decline": "Purtroppo non potrò",
-		"guestCount": "Numero di ospiti",
-		"comment": "Commento",
-		"commentPlaceholder": "Desideri, allergie, domande...",
-		"submit": "Invia",
-		"thankYou": "Grazie per la vostra risposta!",
-		"alreadyResponded": "Avete già risposto all'invito"
-	},
-	"info": {
-		"title": "Informazioni importanti"
-	},
+	"signature": "Vi aspettiamo al nostro matrimonio",
 	"nav": {
-		"story": "Storia",
-		"timeline": "Programma",
-		"venue": "Location",
-		"dresscode": "Dress code",
-		"menu": "Menu",
-		"rsvp": "RSVP"
+		"greeting": "Saluto",
+		"location": "Location",
+		"timing": "Programma",
+		"details": "Dettagli"
 	},
 	"auth": {
 		"login": "Accesso",
