@@ -2,18 +2,25 @@
 
 import { toast, useField } from '@payloadcms/ui'
 import type { DefaultCellComponentProps } from 'payload'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 // ─── shared helpers ──────────────────────────────────
 
-// База ссылки: NEXT_PUBLIC_SITE_URL, иначе — текущий origin админки.
-// origin ставим в useEffect (после гидрации), чтобы не было hydration-mismatch.
+// Источник origin: на сервере '' (как при первом рендере клиента), после
+// гидрации — реальный window.location.origin. useSyncExternalStore даёт
+// корректный snapshot без setState в эффекте и без hydration-mismatch.
+const noopSubscribe = () => () => {}
+function useOrigin(): string {
+	return useSyncExternalStore(
+		noopSubscribe,
+		() => window.location.origin, // клиент
+		() => '', // сервер
+	)
+}
+
 function useBaseUrl(): string {
 	const env = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '')
-	const [origin, setOrigin] = useState('')
-	useEffect(() => {
-		if (!env && typeof window !== 'undefined') setOrigin(window.location.origin)
-	}, [env])
+	const origin = useOrigin()
 	return env || origin
 }
 
@@ -108,7 +115,7 @@ export function CopyLinkField() {
 					color: 'var(--theme-elevation-500)',
 				}}
 			>
-				Нажмите на ссылку, чтобы скопировать, и отправьте её гостю.
+				Нажми на ссылку, чтобы скопировать
 			</p>
 		</div>
 	)
