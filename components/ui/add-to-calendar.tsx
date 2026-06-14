@@ -71,14 +71,14 @@ export function AddToCalendar({
 			type="button"
 			onClick={handleClick}
 			className={cn(
-				'inline-flex items-center justify-center rounded-full',
-				'bg-ink text-cream',
-				'hover:bg-ink-light transition-colors',
+				'inline-flex items-center justify-center rounded-xl cursor-pointer',
+				'border border-ink text-cream border-opacity-20  bg-ink/10 focus-visible:outline  hover:bg-ink/20 focus-visible:outline-offset-2 focus-visible:outline-ink',
+				'transition-colors',
 				'shadow-(--shadow-subtle)',
 				'touch-manipulation',
 				expanded
 					? 'gap-2 px-5 py-2.5 text-xs font-sans tracking-[0.06em]'
-					: 'opacity-70 size-9 sm:size-auto sm:gap-2 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-sans tracking-[0.04em]',
+					: 'size-9 sm:size-auto sm:gap-2 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-sans tracking-[0.04em]',
 				className,
 			)}
 			aria-label={t('addToCalendar')}
@@ -87,7 +87,7 @@ export function AddToCalendar({
 				width="13"
 				height="13"
 				viewBox="0 0 24 24"
-				fill="none"
+				fill="ink"
 				stroke="currentColor"
 				strokeWidth="1.5"
 				strokeLinecap="round"
@@ -99,7 +99,7 @@ export function AddToCalendar({
 				<path d="M8 3v3M16 3v3" />
 				<path d="M12 13v4M10 15h4" />
 			</svg>
-			<span className={cn('whitespace-nowrap', !expanded && 'hidden sm:inline')}>
+			<span className={cn('whitespace-nowrap text-ink', !expanded && 'hidden sm:inline')}>
 				{t('addToCalendar')}
 			</span>
 		</button>

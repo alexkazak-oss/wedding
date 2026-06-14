@@ -5,7 +5,7 @@ import { WEDDING } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
-// 6 цветов (не 8 — иначе на мобильном последний кружок переносится на новую строку).
+// 6 цветов (не 8 иначе на мобильном последний кружок переносится на новую строку).
 const palette = [
   { name: 'Soft Pastel Yellow', hex: '#F0E6B3' },
   { name: 'Muted Sage', hex: '#B4B492' },

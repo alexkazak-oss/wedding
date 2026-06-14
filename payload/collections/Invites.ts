@@ -4,6 +4,7 @@ import type {
 	CollectionAfterReadHook,
 	CollectionBeforeChangeHook,
 	CollectionBeforeDeleteHook,
+	CollectionBeforeValidateHook,
 	CollectionConfig,
 } from 'payload'
 import { revalidateTag } from 'next/cache'
@@ -20,6 +21,36 @@ const beforeCreateGenerateToken: CollectionBeforeChangeHook = async ({ data, ope
 		tokenRaw: token,
 		tokenHash: hashToken(token),
 	}
+}
+
+// Нормализация списка гостей перед валидацией:
+//  • удаляем пустые строки (без имени) — «добавленное, но не заполненное» поле уходит;
+//  • ленивая миграция старых приглашений (firstName/lastName + партнёр) в список guests,
+//    если он ещё пуст, чтобы существующие записи не сломались и считались в отчёте.
+type GuestRow = { firstName?: unknown; lastName?: unknown }
+
+const normalizeGuests: CollectionBeforeValidateHook = ({ data }) => {
+	if (!data) return data
+
+	const trim = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+
+	let guests: Array<{ firstName: string; lastName?: string }> = (
+		Array.isArray(data.guests) ? (data.guests as GuestRow[]) : []
+	)
+		.map((g) => ({ firstName: trim(g?.firstName), lastName: trim(g?.lastName) || undefined }))
+		.filter((g) => g.firstName !== '')
+
+	if (guests.length === 0 && trim(data.firstName) !== '') {
+		guests = [{ firstName: trim(data.firstName), lastName: trim(data.lastName) || undefined }]
+		if (trim(data.partnerFirstName) !== '') {
+			guests.push({
+				firstName: trim(data.partnerFirstName),
+				lastName: trim(data.partnerLastName) || undefined,
+			})
+		}
+	}
+
+	return { ...data, guests }
 }
 
 // Перед удалением приглашения удаляем связанные сессии и логи.
@@ -102,6 +133,10 @@ export const Invites: CollectionConfig = {
 		defaultColumns: ['displayNames', 'inviteUrl', 'locale', 'rsvpStatus', 'createdAt'],
 		description:
 			'Персональные приглашения. На первом открытии данные замораживаются в snapshot.',
+		components: {
+			// Сводный отчёт по гостям над списком приглашений.
+			beforeListTable: ['@/components/payload/invites-report#InvitesReport'],
+		},
 	},
 	access: {
 		read: ({ req: { user } }) => Boolean(user),
@@ -110,6 +145,7 @@ export const Invites: CollectionConfig = {
 		delete: ({ req: { user } }) => Boolean(user),
 	},
 	hooks: {
+		beforeValidate: [normalizeGuests],
 		beforeChange: [beforeCreateGenerateToken],
 		beforeDelete: [cleanupRelatedRecords],
 		afterChange: [revalidateInviteCache],
@@ -196,22 +232,35 @@ export const Invites: CollectionConfig = {
 				},
 				{
 					label: 'Личность',
-					description: 'Используются для верификации, если гость зайдёт со 2-го устройства',
+					description:
+						'Список всех гостей этого приглашения. Имена нужны для проверки, если гость зайдёт со 2-го устройства (узнавание по любому из имён списка). Имя обязательно; пустые строки удаляются при сохранении.',
 					fields: [
 						{
-							type: 'row',
+							name: 'guests',
+							type: 'array',
+							label: 'Гости',
+							labels: { singular: 'Гость', plural: 'Гости' },
+							required: true,
+							minRows: 1,
+							admin: {
+								description: 'Добавьте по строке на каждого приглашённого человека.',
+							},
 							fields: [
-								{ name: 'firstName', type: 'text', required: true, label: 'Имя', admin: { width: '50%' } },
-								{ name: 'lastName', type: 'text', label: 'Фамилия', admin: { width: '50%' } },
+								{
+									type: 'row',
+									fields: [
+										{ name: 'firstName', type: 'text', required: true, label: 'Имя', admin: { width: '50%' } },
+										{ name: 'lastName', type: 'text', label: 'Фамилия', admin: { width: '50%' } },
+									],
+								},
 							],
 						},
-						{
-							type: 'row',
-							fields: [
-								{ name: 'partnerFirstName', type: 'text', label: 'Имя партнёра', admin: { width: '50%' } },
-								{ name: 'partnerLastName', type: 'text', label: 'Фамилия партнёра', admin: { width: '50%' } },
-							],
-						},
+						// Старые поля одиночного гостя/партнёра. Скрыты в UI, но сохранены в БД
+						// ради обратной совместимости и ленивой миграции в список guests.
+						{ name: 'firstName', type: 'text', admin: { hidden: true } },
+						{ name: 'lastName', type: 'text', admin: { hidden: true } },
+						{ name: 'partnerFirstName', type: 'text', admin: { hidden: true } },
+						{ name: 'partnerLastName', type: 'text', admin: { hidden: true } },
 					],
 				},
 				{

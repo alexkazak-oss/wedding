@@ -27,7 +27,8 @@ export interface PayloadInvite {
 	id: number | string
 	greeting: string
 	displayNames: string
-	firstName: string
+	guests?: Array<{ firstName: string; lastName?: string | null }> | null
+	firstName?: string | null
 	lastName?: string | null
 	partnerFirstName?: string | null
 	partnerLastName?: string | null
@@ -259,6 +260,7 @@ export async function findInviteByName(input: {
 		// Тянем только поля, нужные для сопоставления имени и редиректа, —
 		// без frozenSnapshot (json), alcohol-join и прочих тяжёлых колонок.
 		select: {
+			guests: true,
 			firstName: true,
 			lastName: true,
 			partnerFirstName: true,
@@ -272,12 +274,21 @@ export async function findInviteByName(input: {
 	const inputName = { first: parsed.data.firstName, last: parsed.data.lastName }
 
 	const matches = (all.docs as unknown as PayloadInvite[]).filter((invite) => {
-		const candidates: Array<{ first: string; last: string | null }> = [
-			{ first: invite.firstName, last: invite.lastName ?? null },
-		]
-		if (invite.partnerFirstName) {
-			candidates.push({ first: invite.partnerFirstName, last: invite.partnerLastName ?? null })
+		const candidates: Array<{ first: string; last: string | null }> = []
+
+		const guests = Array.isArray(invite.guests) ? invite.guests : []
+		if (guests.length > 0) {
+			for (const g of guests) {
+				if (g?.firstName) candidates.push({ first: g.firstName, last: g.lastName ?? null })
+			}
+		} else {
+			// Запасной путь для старых записей, ещё не перенесённых в список guests.
+			if (invite.firstName) candidates.push({ first: invite.firstName, last: invite.lastName ?? null })
+			if (invite.partnerFirstName) {
+				candidates.push({ first: invite.partnerFirstName, last: invite.partnerLastName ?? null })
+			}
 		}
+
 		return candidates.some((c) => namesMatch(c, inputName))
 	})
 
