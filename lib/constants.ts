@@ -13,6 +13,7 @@ export const WEDDING = {
 	venue: 'DWOR STAJKI, Вилейский район, д. Стайки 20',
 	location: 'Беларусь',
 	mapUrl: 'https://maps.google.com/?q=Dwor+Stajki+Вилейский+район+Стайки',
+	mapUrlYandex: 'https://yandex.ru/maps/?text=Dwor+Stajki+Вилейский+район+Стайки',
 	organizer: {
 		name: 'Алесей',
 		phone: '+375 44 781 8283',
