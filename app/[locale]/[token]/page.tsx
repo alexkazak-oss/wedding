@@ -7,6 +7,7 @@ import {
 	TimingSection,
 } from '@/components/invitation'
 import { ClaimSession } from '@/components/invite/claim-session'
+import { RsvpForm } from '@/components/invite/rsvp-form'
 import { InvitationCard } from '@/components/layout/invitation-card'
 import { Divider } from '@/components/ui/divider'
 import { openInviteByToken } from '@/lib/actions/invite'
@@ -46,6 +47,17 @@ export default async function InvitePage({
 			<TimingSection />
 			<Divider ornament />
 			<DetailsSection />
+			<Divider ornament />
+			<RsvpForm
+				token={token}
+				locale={locale === 'it' ? 'it' : 'ru'}
+				initial={{
+					attending: invite.attending ?? null,
+					transport: invite.transport ?? null,
+					allergies: invite.allergies ?? null,
+					alcohol: invite.alcohol ?? [],
+				}}
+			/>
 			<Divider ornament />
 			<FooterSection />
 		</InvitationCard>

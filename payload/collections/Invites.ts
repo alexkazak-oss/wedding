@@ -162,6 +162,56 @@ export const Invites: CollectionConfig = {
 					],
 				},
 				{
+					label: 'Анкета',
+					description: 'Ответы гостя из формы на странице приглашения.',
+					fields: [
+						{
+							name: 'attending',
+							type: 'select',
+							label: '1. Будете присутствовать?',
+							options: [
+								{ label: 'Конечно — да! Кто-то же должен съесть торт', value: 'yes' },
+								{ label: 'Возможно приду', value: 'maybe' },
+								{ label: 'Не смогу прийти', value: 'no' },
+							],
+						},
+						{
+							name: 'transport',
+							type: 'select',
+							label: '2. Нужен ли трансфер?',
+							options: [
+								{ label: 'Да, из г. Борисов', value: 'borisov' },
+								{ label: 'Да, из г. Минск', value: 'minsk' },
+								{ label: 'Нет', value: 'none' },
+							],
+						},
+						{
+							name: 'allergies',
+							type: 'textarea',
+							label: '3. Пищевая аллергия',
+						},
+						{
+							name: 'alcohol',
+							type: 'select',
+							hasMany: true,
+							label: '4. Предпочитаемый алкоголь (2–3 варианта)',
+							options: [
+								{ label: 'Игристое вино', value: 'sparkling' },
+								{ label: 'Белое вино', value: 'white' },
+								{ label: 'Красное вино', value: 'red' },
+								{ label: 'Водка', value: 'vodka' },
+								{ label: 'Виски', value: 'whisky' },
+							],
+						},
+						{
+							name: 'rsvpSubmittedAt',
+							type: 'date',
+							label: 'Анкета заполнена',
+							admin: { readOnly: true, position: 'sidebar' },
+						},
+					],
+				},
+				{
 					label: 'Статус',
 					fields: [
 						{

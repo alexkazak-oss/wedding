@@ -19,6 +19,8 @@ import { z } from 'zod'
 
 // ─── Shape of a Payload invite doc ───────────────────
 
+export type AlcoholOption = 'sparkling' | 'white' | 'red' | 'vodka' | 'whisky'
+
 export interface PayloadInvite {
 	id: number | string
 	greeting: string
@@ -34,6 +36,12 @@ export interface PayloadInvite {
 	rsvpStatus: 'pending' | 'accepted' | 'declined'
 	guestCount: number
 	comment?: string | null
+	// Анкета (RSVP)
+	attending?: 'yes' | 'maybe' | 'no' | null
+	transport?: 'borisov' | 'minsk' | 'none' | null
+	allergies?: string | null
+	alcohol?: AlcoholOption[] | null
+	rsvpSubmittedAt?: string | null
 	tokenRaw?: string | null
 	tokenHash: string
 	frozenSnapshot?: InviteSnapshot | null
@@ -241,6 +249,70 @@ export async function findInviteByName(input: {
 
 	await issueSessionCookie(invite.id)
 	return { ok: true, locale: invite.locale, token: invite.tokenRaw }
+}
+
+// ─── Public: save / edit RSVP questionnaire ──────────
+
+const rsvpSchema = z.object({
+	token: z.string().min(8),
+	attending: z.enum(['yes', 'maybe', 'no']).nullable().optional(),
+	transport: z.enum(['borisov', 'minsk', 'none']).nullable().optional(),
+	allergies: z.string().max(1000).nullable().optional(),
+	alcohol: z
+		.array(z.enum(['sparkling', 'white', 'red', 'vodka', 'whisky']))
+		.max(3)
+		.optional(),
+})
+
+export type SaveRsvpInput = {
+	token: string
+	attending?: 'yes' | 'maybe' | 'no' | null
+	transport?: 'borisov' | 'minsk' | 'none' | null
+	allergies?: string | null
+	alcohol?: AlcoholOption[]
+}
+
+export async function saveRsvp(
+	input: SaveRsvpInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	const parsed = rsvpSchema.safeParse(input)
+	if (!parsed.success) {
+		return { ok: false, error: 'Проверьте заполнение анкеты.' }
+	}
+
+	const p = await payload()
+	const found = await p.find({
+		collection: 'invites',
+		where: { tokenHash: { equals: hashToken(parsed.data.token) } },
+		limit: 1,
+		overrideAccess: true,
+	})
+	const invite = found.docs[0] as PayloadInvite | undefined
+	if (!invite) return { ok: false, error: 'Приглашение не найдено.' }
+
+	await p.update({
+		collection: 'invites',
+		id: invite.id,
+		data: {
+			attending: parsed.data.attending ?? null,
+			transport: parsed.data.transport ?? null,
+			allergies: parsed.data.allergies ?? null,
+			alcohol: parsed.data.alcohol ?? [],
+			rsvpSubmittedAt: new Date().toISOString(),
+			// Ответ о присутствии отражаем и в общем статусе.
+			rsvpStatus:
+				parsed.data.attending === 'yes'
+					? 'accepted'
+					: parsed.data.attending === 'no'
+						? 'declined'
+						: parsed.data.attending === 'maybe'
+							? 'pending'
+							: invite.rsvpStatus,
+		},
+		overrideAccess: true,
+	})
+
+	return { ok: true }
 }
 
 // ─── Public: read current invite via cookie ──────────
