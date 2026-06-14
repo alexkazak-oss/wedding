@@ -84,6 +84,7 @@ const COPY = {
 
 const ALCOHOL_ORDER: AlcoholOption[] = ['sparkling', 'white', 'red', 'vodka', 'whisky']
 const TRANSPORT_ORDER: Transport[] = ['borisov', 'minsk', 'none']
+const ATTENDING_ORDER: Attending[] = ['yes', 'maybe', 'no']
 
 export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 	const t = COPY[locale] ?? COPY.ru
@@ -136,7 +137,7 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 			className="flex w-full items-center gap-3 py-2.5 text-left"
 		>
 			<span
-				className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border ${
+				className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
 					active ? 'border-ink' : 'border-border'
 				}`}
 			>
@@ -153,7 +154,7 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 			className="flex w-full items-center gap-3 py-2.5 text-left"
 		>
 			<span
-				className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[4px] border ${
+				className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border ${
 					active ? 'border-ink bg-ink text-cream' : 'border-border'
 				}`}
 			>
@@ -185,10 +186,12 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 				{/* Q1 */}
 				<div>
 					<span className={labelCls}>{t.q1}</span>
-					{radioRow(attending === 'yes', t.attendingYes, () => {
-						touch()
-						setAttending('yes')
-					})}
+					{ATTENDING_ORDER.map((v) =>
+						<div key={v}>{radioRow(attending === v, t.attending[v], () => {
+							touch()
+							setAttending(v)
+						})}</div>,
+					)}
 				</div>
 
 				{/* Q2 */}
