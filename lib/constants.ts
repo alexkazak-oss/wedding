@@ -18,8 +18,10 @@ export const WEDDING = {
 		phone: '+375 44 781 8283',
 		telegram: 'https://t.me/valuyevaa',
 		telegramLabel: '@valuyevaa',
+		// Телеграм-канал организатора (имя «Алесей» в тексте ведёт сюда).
+		channel: 'https://t.me/valuyevaa',
 	},
 	// Ссылка-приглашение в Telegram-чат для гостей (вставьте URL вида https://t.me/+xxxxx).
-	guestChatTelegram: '',
+	guestChatTelegram: 'https://t.me/+ez6RVezSKBxmZmRi',
 	domain: 'kazak-av.site',
 } as const

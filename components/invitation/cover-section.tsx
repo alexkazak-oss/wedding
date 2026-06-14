@@ -124,7 +124,7 @@ export function CoverSection() {
 
 					{/* Обратный отсчёт */}
 					<Reveal delay={0.54}>
-						<div className=" pb-2 flex flex-col items-center text-ink-light" style={{ fontSize: 'clamp(1.25rem, 5vw, 1.5rem)' }}>
+						<div className="mt-20 pb-2 flex flex-col items-center text-ink-light" style={{ fontSize: 'clamp(1.25rem, 5vw, 1.5rem)' }}>
 							<Countdown target={WEDDING.dateIso} showWeeks />
 						</div>
 					</Reveal>

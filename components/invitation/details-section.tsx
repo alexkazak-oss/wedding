@@ -5,16 +5,14 @@ import { WEDDING } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
-// 7 цветов (не 8 — иначе на мобильном последний кружок переносится на новую строку).
-// Порядок при желании можно поменять позже.
+// 6 цветов (не 8 — иначе на мобильном последний кружок переносится на новую строку).
 const palette = [
-	{ name: 'Pastel Yellow', hex: '#EFE6B4' },
-	{ name: 'Winter Pear', hex: '#B3B490' },
-	{ name: 'Peach Cobbler', hex: '#F4B58A' },
-	{ name: 'Olive Branch', hex: '#6A6A48' },
-	{ name: 'Dusty Rose', hex: '#B37D7F' },
-	{ name: 'Morron Terracotta', hex: '#845540' },
-	{ name: 'Chocolate Lab', hex: '#573F36' },
+  { name: 'Soft Pastel Yellow', hex: '#F0E6B3' },
+  { name: 'Muted Sage', hex: '#B4B492' },
+  { name: 'Olive Branch', hex: '#6B6B49' },
+  { name: 'Marron Terracotta', hex: '#855443' },
+  { name: 'Soft Peach', hex: '#F6B58B' },
+  { name: 'Dusty Rose', hex: '#FAD6D8' }
 ]
 
 export function DetailsSection() {
@@ -41,7 +39,7 @@ export function DetailsSection() {
 					<motion.div
 						key={c.name}
 						variants={fadeUp}
-						className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-border-light shadow-[var(--shadow-subtle)]"
+						className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border border-border-light shadow-(--shadow-subtle)"
 						style={{ backgroundColor: c.hex }}
 						aria-label={c.name}
 					/>
@@ -63,7 +61,14 @@ export function DetailsSection() {
 				<div className="mt-12 mx-auto max-w-md">
 					<p className="text-sm text-ink-light font-sans leading-[1.8]">
 						{t('organizerIntro')}{' '}
-						<span className="font-serif text-ink text-base italic">{t('organizerName')}</span>
+						<a
+							href={WEDDING.organizer.channel}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="font-serif text-ink text-base italic underline underline-offset-4 decoration-ink/40 hover:decoration-ink transition-colors"
+						>
+							{t('organizerName')}
+						</a>
 					</p>
 					<div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
 						<a
@@ -90,13 +95,13 @@ export function DetailsSection() {
 				</div>
 			</Reveal>
 
-			{/* Уведомление о присутствии + чат гостей */}
-			<Reveal delay={0.3}>
-				<div className="mt-12 mx-auto max-w-md">
-					<p className="font-serif italic text-base sm:text-lg text-ink leading-[1.6]">
-						{t('callbackMessage')}
-					</p>
-					{WEDDING.guestChatTelegram ? (
+			{/* Общий чат гостей */}
+			{WEDDING.guestChatTelegram ? (
+				<Reveal delay={0.28}>
+					<div className="mt-12 mx-auto max-w-md">
+						<p className="text-sm text-ink-light font-sans leading-[1.8]">
+							{t('guestChatText')}
+						</p>
 						<a
 							href={WEDDING.guestChatTelegram}
 							target="_blank"
@@ -108,7 +113,16 @@ export function DetailsSection() {
 							</svg>
 							{t('guestChatLabel')}
 						</a>
-					) : null}
+					</div>
+				</Reveal>
+			) : null}
+
+			{/* Уведомление о присутствии */}
+			<Reveal delay={0.34}>
+				<div className="mt-12 mx-auto max-w-md">
+					<p className="font-serif italic text-base sm:text-lg text-ink leading-[1.6]">
+						{t('callbackMessage')}
+					</p>
 				</div>
 			</Reveal>
 		</section>

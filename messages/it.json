@@ -54,7 +54,8 @@
 		"organizerIntro": "Se avete domande o problemi, potete contattare la nostra meravigliosa organizzatrice",
 		"organizerName": "Alesya",
 		"callbackMessage": "Vi preghiamo di confermare la vostra presenza al matrimonio entro il 20.08.26",
-		"guestChatLabel": "Chat degli ospiti su Telegram"
+		"guestChatText": "Gli ospiti possono sempre unirsi alla chat generale dell'evento",
+		"guestChatLabel": "Unisciti alla chat"
 	},
 	"sections": {
 		"greeting": "Saluto",
