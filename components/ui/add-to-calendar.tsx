@@ -11,6 +11,8 @@ interface AddToCalendarProps {
 	startDate: string
 	endDate: string
 	className?: string
+	/** Полная «таблетка» с подписью на всех размерах (как на обложке). */
+	expanded?: boolean
 }
 
 function isAndroidUA(ua: string) {
@@ -46,6 +48,7 @@ export function AddToCalendar({
 	startDate,
 	endDate,
 	className,
+	expanded = false,
 }: AddToCalendarProps) {
 	const t = useTranslations('cover')
 	const event = { title, description, location, startDate, endDate }
@@ -69,13 +72,13 @@ export function AddToCalendar({
 			onClick={handleClick}
 			className={cn(
 				'inline-flex items-center justify-center rounded-full',
-				'bg-ink text-cream opacity-70',
-				'size-9 sm:size-auto sm:gap-2 sm:px-4 sm:py-2',
-				'text-[11px] sm:text-xs',
-				'font-sans tracking-[0.04em]',
+				'bg-ink text-cream',
 				'hover:bg-ink-light transition-colors',
 				'shadow-(--shadow-subtle)',
 				'touch-manipulation',
+				expanded
+					? 'gap-2 px-5 py-2.5 text-xs font-sans tracking-[0.06em]'
+					: 'opacity-70 size-9 sm:size-auto sm:gap-2 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-sans tracking-[0.04em]',
 				className,
 			)}
 			aria-label={t('addToCalendar')}
@@ -96,7 +99,9 @@ export function AddToCalendar({
 				<path d="M8 3v3M16 3v3" />
 				<path d="M12 13v4M10 15h4" />
 			</svg>
-			<span className="hidden sm:inline whitespace-nowrap">{t('addToCalendar')}</span>
+			<span className={cn('whitespace-nowrap', !expanded && 'hidden sm:inline')}>
+				{t('addToCalendar')}
+			</span>
 		</button>
 	)
 }

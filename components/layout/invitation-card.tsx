@@ -21,6 +21,8 @@ export function InvitationCard({ children, className }: InvitationCardProps) {
 					'sm:rounded-sm',
 					'min-h-screen sm:min-h-0',
 					'overflow-hidden',
+					'px-0',
+					'sm:px-4',
 					className,
 				)}
 			>

@@ -9,14 +9,8 @@ export function LocationSection() {
 
 	return (
 		<section id="location" className="px-6 sm:px-12 py-14 text-center">
-			<Reveal>
-				<p className="text-[11px] sm:text-xs uppercase tracking-[0.32em] text-ink-muted font-sans">
-					{t('title')}
-				</p>
-			</Reveal>
-
 			<Reveal delay={0.1}>
-				<h3 className="mt-4 font-serif text-3xl sm:text-4xl text-ink tracking-[0.05em]">
+				<h3 className="font-serif text-3xl sm:text-4xl text-ink tracking-[0.05em]">
 					{t('venue')}
 				</h3>
 			</Reveal>

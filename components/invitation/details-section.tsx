@@ -21,22 +21,16 @@ export function DetailsSection() {
 	const t = useTranslations('details')
 
 	return (
-		<section id="details" className="px-6 sm:px-12 py-14 text-center">
-			<Reveal>
-				<p className="text-[11px] sm:text-xs uppercase tracking-[0.32em] text-ink-muted font-sans">
-					{t('title')}
-				</p>
-			</Reveal>
-
+		<section id="details" className="px-6 sm:px-12 py-14 text-center flex flex-col items-center gap-10">
 			{/* Dress code */}
 			<Reveal delay={0.1}>
-				<h3 className="mt-8 font-serif font-semibold text-xl sm:text-2xl text-ink tracking-wide">
+				<h3 className=" font-serif font-semibold text-xl sm:text-2xl text-ink tracking-wide">
 					{t('dresscodeTitle')}
 				</h3>
 			</Reveal>
 
 			<Reveal delay={0.18}>
-				<p className="mt-4 mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
+				<p className="mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
 					{t('dresscodeText')}
 				</p>
 			</Reveal>

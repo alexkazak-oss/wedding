@@ -219,7 +219,18 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 						}}
 						rows={2}
 						placeholder={t.q3ph}
-						className="w-full bg-transparent border-0 border-b border-border focus:border-ink outline-none py-2 text-base text-ink font-sans resize-none"
+						className=" w-full
+  bg-transparent
+  border border-neutral-300
+  rounded-sm
+  outline-none
+  py-2
+  text-base
+  text-ink
+  font-sans
+  resize-none
+  transition-colors
+  focus:border-neutral-500"
 					/>
 				</div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Reveal, Stagger, fadeUp } from '@/components/ui/reveal'
+import { Stagger, fadeUp } from '@/components/ui/reveal'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
@@ -15,13 +15,7 @@ export function TimingSection() {
 
 	return (
 		<section id="timing" className="px-6 sm:px-12 py-14 text-center items-center flex flex-col">
-			<Reveal>
-				<p className="text-[11px] sm:text-xs uppercase tracking-[0.32em] text-ink-muted font-sans">
-					{t('title')}
-				</p>
-			</Reveal>
-
-			<Stagger className="mx-auto mt-8 max-w-sm space-y-5">
+			<Stagger className="mx-auto max-w-sm space-y-5">
 				{items.map((item) => (
 					<motion.div
 						key={item.time}

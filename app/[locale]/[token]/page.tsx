@@ -9,10 +9,10 @@ import {
 import { ClaimSession } from '@/components/invite/claim-session'
 import { RsvpForm } from '@/components/invite/rsvp-form'
 import { InvitationCard } from '@/components/layout/invitation-card'
-import { Divider } from '@/components/ui/divider'
+import { SectionDivider } from '@/components/ui/section-divider'
 import { openInviteByToken } from '@/lib/actions/invite'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 // Страница кэшируется (Data Cache + полный кэш маршрута по токену), поэтому
 // 500 заходов обслуживаются без обращений к БД. Свежесть данных обеспечивает
@@ -36,19 +36,21 @@ export default async function InvitePage({
 	// Живое значение из админки (без заморозки) — чтобы правки сразу отражались.
 	const greeting = invite.greeting
 
+	const sections = await getTranslations('sections')
+
 	return (
 		<InvitationCard>
 			<ClaimSession token={token} />
 			<CoverSection />
-			<Divider ornament />
+			<SectionDivider label={sections('greeting')} />
 			<GreetingSection overrideTitle={greeting} />
-			<Divider ornament />
+			<SectionDivider label={sections('location')} />
 			<LocationSection />
-			<Divider ornament />
+			<SectionDivider label={sections('timing')} />
 			<TimingSection />
-			<Divider ornament />
+			<SectionDivider label={sections('details')} />
 			<DetailsSection />
-			<Divider ornament />
+			<SectionDivider label={sections('rsvp')} />
 			<RsvpForm
 				token={token}
 				locale={locale === 'it' ? 'it' : 'ru'}
@@ -59,7 +61,6 @@ export default async function InvitePage({
 					alcohol: invite.alcohol ?? [],
 				}}
 			/>
-			<Divider ornament />
 			<FooterSection />
 		</InvitationCard>
 	)
