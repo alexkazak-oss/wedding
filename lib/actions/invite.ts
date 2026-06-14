@@ -55,6 +55,11 @@ async function payload() {
 	return getPayload({ config })
 }
 
+// Повторные визиты обновляют lastSeenAt не чаще раза в 5 минут. Страница
+// приглашения — force-dynamic и перерисовывается на каждый заход/refresh,
+// без троттлинга это давало бы UPDATE одной строки на каждый рендер.
+const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000
+
 async function readUserAgent() {
 	const h = await headers()
 	return h.get('user-agent') ?? null
@@ -80,6 +85,8 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 		collection: 'invites',
 		where: { tokenHash: { equals: tokenHash } },
 		limit: 1,
+		depth: 0, // у invites нет relationship-полей — не нужны JOIN'ы
+		pagination: false, // пропускаем лишний COUNT(*) для метаданных пагинации
 		overrideAccess: true,
 	})
 
@@ -101,6 +108,7 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 			collection: 'invites',
 			id: invite.id,
 			data: { openedAt: now, lastSeenAt: now, frozenSnapshot: snapshot },
+			depth: 0,
 			overrideAccess: true,
 		})
 		await p.create({
@@ -111,12 +119,18 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 		return { state: 'ok', invite: updated as unknown as PayloadInvite }
 	}
 
-	await p.update({
-		collection: 'invites',
-		id: invite.id,
-		data: { lastSeenAt: now },
-		overrideAccess: true,
-	})
+	// Повторный визит: пишем lastSeenAt только если он устарел — иначе на каждый
+	// рендер force-dynamic-страницы был бы UPDATE одной и той же строки.
+	const lastSeenMs = invite.lastSeenAt ? new Date(invite.lastSeenAt).getTime() : 0
+	if (Date.now() - lastSeenMs > LAST_SEEN_THROTTLE_MS) {
+		await p.update({
+			collection: 'invites',
+			id: invite.id,
+			data: { lastSeenAt: now },
+			depth: 0,
+			overrideAccess: true,
+		})
+	}
 	return { state: 'ok', invite }
 }
 
@@ -126,34 +140,35 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
  * Вызывается из клиента (Server Action) — запись cookie здесь разрешена.
  */
 export async function claimInviteSession(rawToken: string): Promise<void> {
-	const tokenHash = hashToken(rawToken)
 	const p = await payload()
 
+	// Находим id приглашения по токену (depth:0 → без JOIN'ов; select → только id).
 	const found = await p.find({
 		collection: 'invites',
-		where: { tokenHash: { equals: tokenHash } },
+		where: { tokenHash: { equals: hashToken(rawToken) } },
 		limit: 1,
+		depth: 0,
+		pagination: false,
+		select: {},
 		overrideAccess: true,
 	})
-	const invite = found.docs[0] as PayloadInvite | undefined
+	const invite = found.docs[0] as { id: string | number } | undefined
 	if (!invite) return
 
-	// Уже есть валидная сессия именно для этого приглашения — ничего не делаем.
+	// Уже есть валидная сессия именно для этого приглашения — ни одной записи в БД.
 	const existing = await getInviteSessionCookie()
 	if (existing) {
 		const look = await p.find({
 			collection: 'invite-sessions',
 			where: { sessionHash: { equals: hashSession(existing) } },
 			limit: 1,
+			depth: 0, // invite вернётся как id, а не как подгруженный документ
+			pagination: false,
+			select: { invite: true },
 			overrideAccess: true,
 		})
-		const s = look.docs[0] as unknown as
-			| { invite: string | number | { id: string | number } }
-			| undefined
-		if (s) {
-			const sid = typeof s.invite === 'object' && s.invite !== null ? s.invite.id : s.invite
-			if (String(sid) === String(invite.id)) return
-		}
+		const s = look.docs[0] as { invite: string | number } | undefined
+		if (s && String(s.invite) === String(invite.id)) return
 	}
 
 	await issueSessionCookie(invite.id)
@@ -207,6 +222,18 @@ export async function findInviteByName(input: {
 	const all = await p.find({
 		collection: 'invites',
 		limit: 1000,
+		depth: 0,
+		pagination: false, // не считаем COUNT(*) — нам нужны только строки
+		// Тянем только поля, нужные для сопоставления имени и редиректа, —
+		// без frozenSnapshot (json), alcohol-join и прочих тяжёлых колонок.
+		select: {
+			firstName: true,
+			lastName: true,
+			partnerFirstName: true,
+			partnerLastName: true,
+			locale: true,
+			tokenRaw: true,
+		},
 		overrideAccess: true,
 	})
 
@@ -285,6 +312,8 @@ export async function saveRsvp(
 		collection: 'invites',
 		where: { tokenHash: { equals: hashToken(parsed.data.token) } },
 		limit: 1,
+		depth: 0,
+		pagination: false,
 		overrideAccess: true,
 	})
 	const invite = found.docs[0] as PayloadInvite | undefined
@@ -293,6 +322,7 @@ export async function saveRsvp(
 	await p.update({
 		collection: 'invites',
 		id: invite.id,
+		depth: 0,
 		data: {
 			attending: parsed.data.attending ?? null,
 			transport: parsed.data.transport ?? null,
@@ -326,22 +356,21 @@ export async function getCurrentInvite(): Promise<PayloadInvite | null> {
 		collection: 'invite-sessions',
 		where: { sessionHash: { equals: hashSession(sessionRaw) } },
 		limit: 1,
+		depth: 0, // invite вернётся как id, без подгрузки документа
+		pagination: false,
+		select: { invite: true },
 		overrideAccess: true,
 	})
-	const session = sessionLookup.docs[0] as unknown as
-		| { invite: string | number | { id: string | number } }
-		| undefined
+	const session = sessionLookup.docs[0] as { invite: string | number } | undefined
 	if (!session) return null
 
-	const inviteId =
-		typeof session.invite === 'object' && session.invite !== null
-			? session.invite.id
-			: session.invite
+	const inviteId = session.invite
 
 	// disableErrors: вернуть null, а не бросать, если приглашение удалили в админке.
 	const invite = (await p.findByID({
 		collection: 'invites',
 		id: inviteId,
+		depth: 0,
 		overrideAccess: true,
 		disableErrors: true,
 	})) as unknown as PayloadInvite | null

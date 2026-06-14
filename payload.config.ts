@@ -44,10 +44,19 @@ export default buildConfig({
 	db: postgresAdapter({
 		pool: {
 			connectionString,
-			// Serverless (Vercel): держим минимум соединений на инстанс, чтобы не
-			// исчерпать пул Supabase. На проде используйте transaction-пул (порт 6543).
-			max: 1,
-			idleTimeoutMillis: 10_000,
+			// Serverless (Vercel Fluid Compute): на проде ОБЯЗАТЕЛЬНО transaction-пул
+			// Supabase (порт 6543) — соединение возвращается в пул после каждой
+			// транзакции, поэтому 500 одновременных сессий мультиплексируются на
+			// небольшое число серверных коннектов вместо их исчерпания.
+			// Небольшой пул на инстанс: запросы короткие и проиндексированы.
+			max: 5,
+			// Быстро освобождаем простаивающие соединения и не висим на коннекте.
+			idleTimeoutMillis: 30_000,
+			connectionTimeoutMillis: 10_000,
+			// Защита пула: убиваем зависшие запросы/транзакции, чтобы они не
+			// держали соединение и не выстраивали очередь под нагрузкой.
+			statement_timeout: 15_000,
+			idle_in_transaction_session_timeout: 10_000,
 		},
 		schemaName: 'payload',
 		// Схема ведётся вручную через supabase/schema.sql, поэтому отключаем
