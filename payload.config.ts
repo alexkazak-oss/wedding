@@ -25,7 +25,6 @@ export default buildConfig({
 		},
 	},
 	collections: [Users, Invites, InviteSessions, InviteAccessLogs],
-	// Админка только на русском: единственный поддерживаемый язык + язык по умолчанию.
 	i18n: {
 		supportedLanguages: { ru },
 		fallbackLanguage: 'ru',
@@ -40,6 +39,10 @@ export default buildConfig({
 	db: postgresAdapter({
 		pool: {
 			connectionString: process.env.DATABASE_URI || 'http://localhost:3000',
+			// Serverless (Vercel): держим минимум соединений на инстанс, чтобы не
+			// исчерпать пул Supabase. На проде используйте transaction-пул (порт 6543).
+			max: 1,
+			idleTimeoutMillis: 10_000,
 		},
 		schemaName: 'payload',
 	}),
