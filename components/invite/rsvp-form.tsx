@@ -2,6 +2,7 @@
 
 import type { AlcoholOption, SaveRsvpInput } from '@/lib/actions/invite'
 import { saveRsvp } from '@/lib/actions/invite'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -26,11 +27,10 @@ const MAX_ALCOHOL = 3
 const COPY = {
 	ru: {
 		title: 'Анкета гостя',
-		subtitle: 'Пожалуйста, заполните — это поможет нам всё подготовить.',
 		q1: 'Будете ли Вы присутствовать?',
 		attending: {
 			yes: 'Конечно — да! Кто-то же должен съесть торт',
-			maybe: 'Возможно приду',
+			maybe: 'Отвечу точно до 20.08.2026',
 			no: 'Не смогу прийти',
 		},
 		q2: 'Необходим ли Вам трансфер?',
@@ -54,11 +54,10 @@ const COPY = {
 	},
 	it: {
 		title: 'Questionario',
-		subtitle: 'Compila per favore — ci aiuterà a organizzare tutto.',
 		q1: 'Sarai presente?',
 		attending: {
 			yes: 'Certo che sì! Qualcuno deve pur mangiare la torta',
-			maybe: 'Forse verrò',
+			maybe: 'Risponderò entro il 20.08.2026',
 			no: 'Non potrò venire',
 		},
 		q2: 'Hai bisogno di un transfer?',
@@ -97,6 +96,10 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 	const [error, setError] = useState<string | null>(null)
 	const [saved, setSaved] = useState(false)
 	const [pending, startTransition] = useTransition()
+
+	// Остальные вопросы показываем, только если гость придёт или ответит позже.
+	// При «не смогу прийти» анкета заканчивается на первом вопросе.
+	const showDetails = attending === 'yes' || attending === 'maybe'
 
 	function touch() {
 		if (saved) setSaved(false)
@@ -171,7 +174,7 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 	const labelCls = 'block font-serif text-lg sm:text-xl text-ink mb-2'
 
 	return (
-		<section id="rsvp" className="px-6 sm:px-12 py-14">
+		<section id="rsvp" className="px-6 sm:px-12 py-14 flex flex-col items-center">
 			<div className="text-center mb-10">
 				<h2
 					className="font-serif text-ink tracking-wide"
@@ -179,10 +182,9 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 				>
 					{t.title}
 				</h2>
-				<p className="mt-3 text-sm text-ink-light font-sans">{t.subtitle}</p>
 			</div>
 
-			<form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-9">
+			<form onSubmit={handleSubmit} className="max-w-md mx-auto">
 				{/* Q1 */}
 				<div>
 					<span className={labelCls}>{t.q1}</span>
@@ -190,36 +192,56 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 						<div key={v}>{radioRow(attending === v, t.attending[v], () => {
 							touch()
 							setAttending(v)
+							// «Не смогу прийти» — очищаем последующие ответы, анкета закрывается.
+							if (v === 'no') {
+								setTransport(null)
+								setAllergies('')
+								setAlcohol([])
+								setError(null)
+							}
 						})}</div>,
 					)}
 				</div>
 
-				{/* Q2 */}
-				<div>
-					<span className={labelCls}>{t.q2}</span>
-					{TRANSPORT_ORDER.map((v) =>
-						<div key={v}>{radioRow(transport === v, t.transport[v], () => {
-							touch()
-							setTransport(v)
-						})}</div>,
-					)}
-				</div>
+				<AnimatePresence initial={false}>
+					{showDetails && (
+						<motion.div
+							key="rsvp-details"
+							initial={{ height: 0, opacity: 0 }}
+							animate={{ height: 'auto', opacity: 1 }}
+							exit={{ height: 0, opacity: 0 }}
+							transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+							className="overflow-hidden"
+						>
+						{/* pt-9 — отступ от Q1 внутри сворачиваемой области, чтобы он
+						    исчезал вместе с высотой и кнопка не «прыгала». */}
+						<div className="space-y-9 pt-9">
+						{/* Q2 */}
+						<div>
+							<span className={labelCls}>{t.q2}</span>
+							{TRANSPORT_ORDER.map((v) =>
+								<div key={v}>{radioRow(transport === v, t.transport[v], () => {
+									touch()
+									setTransport(v)
+								})}</div>,
+							)}
+						</div>
 
-				{/* Q3 */}
-				<div>
-					<label htmlFor="rsvp-allergies" className={labelCls}>
-						{t.q3}
-					</label>
-					<textarea
-						id="rsvp-allergies"
-						value={allergies}
-						onChange={(e) => {
-							touch()
-							setAllergies(e.target.value)
-						}}
-						rows={2}
-						placeholder={t.q3ph}
-						className=" w-full
+						{/* Q3 */}
+						<div>
+							<label htmlFor="rsvp-allergies" className={labelCls}>
+								{t.q3}
+							</label>
+							<textarea
+								id="rsvp-allergies"
+								value={allergies}
+								onChange={(e) => {
+									touch()
+									setAllergies(e.target.value)
+								}}
+								rows={2}
+								placeholder={t.q3ph}
+								className=" w-full
   bg-transparent
   border border-neutral-300
   rounded-sm
@@ -231,31 +253,39 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
   resize-none
   transition-colors
   focus:border-neutral-500"
-					/>
-				</div>
+							/>
+						</div>
 
-				{/* Q4 */}
-				<div>
-					<span className={labelCls}>{t.q4}</span>
-					<p className="text-xs text-ink-muted font-sans mb-1">{t.q4hint}</p>
-					{ALCOHOL_ORDER.map((v) =>
-						<div key={v}>{checkRow(alcohol.includes(v), t.alcohol[v], () => toggleAlcohol(v))}</div>,
+						{/* Q4 */}
+						<div>
+							<span className={labelCls}>{t.q4}</span>
+							<p className="text-xs text-ink-muted font-sans mb-1">{t.q4hint}</p>
+							{ALCOHOL_ORDER.map((v) =>
+								<div key={v}>{checkRow(alcohol.includes(v), t.alcohol[v], () => toggleAlcohol(v))}</div>,
+							)}
+						</div>
+						</div>
+						</motion.div>
 					)}
-				</div>
+				</AnimatePresence>
 
-				{error && <p className="text-xs text-red-700/80 font-sans">{error}</p>}
+				{/* Постоянный отступ сверху (mt-9): не зависит от наличия блока
+				    деталей, поэтому при его удалении из DOM кнопка не дёргается. */}
+				<div className="mt-9 space-y-4">
+					{error && <p className="text-xs text-red-700/80 font-sans">{error}</p>}
 
-				<div className="flex items-center gap-4 pt-2">
-					<button
-						type="submit"
-						disabled={pending}
-						className="px-8 py-3 bg-ink text-cream uppercase text-xs tracking-[0.18em] font-sans hover:bg-ink-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{pending ? t.saving : saved ? t.saved : t.save}
-					</button>
-					{saved && !pending && (
-						<span className="text-sm text-ink-light font-sans">{t.edit}</span>
-					)}
+					<div className="flex items-center gap-4">
+						<button
+							type="submit"
+							disabled={pending}
+							className="px-8 py-3 bg-ink/70 rounded-sm text-cream uppercase text-xs tracking-[0.18em] font-sans hover:bg-ink-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{pending ? t.saving : saved ? t.saved : t.save}
+						</button>
+						{saved && !pending && (
+							<span className="text-sm text-ink-light font-sans">{t.edit}</span>
+						)}
+					</div>
 				</div>
 			</form>
 		</section>

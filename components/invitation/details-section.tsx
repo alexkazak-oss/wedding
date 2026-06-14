@@ -5,7 +5,7 @@ import { WEDDING } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
-// 6 цветов (не 8 иначе на мобильном последний кружок переносится на новую строку).
+// 6 цветов (не 8 — иначе на мобильном последний кружок переносится на новую строку).
 const palette = [
   { name: 'Soft Pastel Yellow', hex: '#F0E6B3' },
   { name: 'Muted Sage', hex: '#B4B492' },
@@ -28,13 +28,19 @@ export function DetailsSection() {
 			</Reveal>
 
 			<Reveal delay={0.18}>
+				<div className="flex flex-col items-center gap-5">
+
 				<p className="mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
 					{t('dresscodeText')}
 				</p>
+				<p className="mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
+					{t('dresscodeStyleText')}
+				</p>
+				</div>
 			</Reveal>
 
 			{/* Color palette */}
-			<Stagger className="mt-7 flex flex-wrap justify-center gap-3 sm:gap-4">
+			<Stagger className="my-7 flex flex-wrap justify-center gap-3 sm:gap-4">
 				{palette.map((c) => (
 					<motion.div
 						key={c.name}
@@ -48,12 +54,15 @@ export function DetailsSection() {
 
 			{/* Gifts */}
 			<Reveal delay={0.2}>
-				<p className="mt-12 mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
+				<div className="flex flex-col items-center gap-5">
+
+				<p className="mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
 					{t('giftsText')}
 				</p>
-				<p className="mt-4 mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
+				<p className="mx-auto max-w-md text-sm text-ink-light font-sans leading-[1.8]">
 					{t('giftsText2')}
 				</p>
+				</div>
 			</Reveal>
 
 			{/* Organizer */}
