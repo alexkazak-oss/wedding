@@ -16,25 +16,29 @@ export function CoverSection() {
 	const eventLocation = `${loc('venue')}, ${loc('address')}`
 
 	return (
-		<section className="relative bg-cream">
-			{/* Top bar — safe-area aware */}
-			<div className="safe-top safe-x absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 mt-5 md:mt-8 mx-6">
-				<AddToCalendar
-					title={eventTitle}
-					description={eventDescription}
+		<section className="relative bg-cream min-h-svh flex flex-col">
+			<div className="safe-top safe-x relative z-10 flex items-start justify-between gap-3 mt-5 md:mt-8 mx-6">
+				<div className="flex flex-col items-start gap-4 border-l border-ink/30 pl-8 leading-none font-sans text-ink/70 text-xl tracking-[0.22em] py-12">
+					<span>{t('day')}</span>
+					<span>{t('month')}</span>
+					<span>{t('year')}</span>
+				</div>
 
-					location={eventLocation}
-					startDate={WEDDING.dateIso}
-					endDate={WEDDING.endDateIso}
-				/>
-				<LocaleSwitcher />
+				<div className="flex items-center gap-3">
+					<AddToCalendar
+						title={eventTitle}
+						description={eventDescription}
+						location={eventLocation}
+						startDate={WEDDING.dateIso}
+						endDate={WEDDING.endDateIso}
+					/>
+					<LocaleSwitcher />
+				</div>
 			</div>
 
-			<div className="relative px-5 xs:px-6 sm:px-12 pt-[clamp(4.5rem,18vw,6.5rem)] pb-12 sm:pb-14">
-
-
+			<div className="relative flex-1 flex flex-col justify-center px-5 xs:px-6 sm:px-12 sm:py-16">
 				{/* Names */}
-				<div className="mt-8 sm:mt-14 text-center">
+				<div className="text-center">
 					<Reveal delay={0.05}>
 						<h1
 							className="font-serif font-light text-ink tracking-[0.01em] leading-[1.02] wrap-break-word"
@@ -46,7 +50,7 @@ export function CoverSection() {
 
 					<Reveal delay={0.12}>
 						<p
-							className="font-signature text-ink/85 leading-none my-1 sm:my-2"
+							className="font-signature text-ink/85 leading-none my-3 sm:my-4"
 							style={{ fontSize: 'clamp(1.75rem, 7vw, 2.5rem)' }}
 							aria-hidden="true"
 						>
@@ -67,7 +71,7 @@ export function CoverSection() {
 				{/* "Мы женимся!" — bold */}
 				<Reveal delay={0.28}>
 					<p
-						className="mt-9 sm:mt-10 text-center font-serif font-semibold text-ink tracking-wide"
+						className="mt-14 sm:mt-16 text-center font-serif font-semibold text-ink tracking-wide"
 						style={{ fontSize: 'clamp(1.5rem, 5.5vw, 1.875rem)' }}
 					>
 						{t('headline')}
@@ -77,7 +81,7 @@ export function CoverSection() {
 				{/* Date 08.09.2026 */}
 				<Reveal delay={0.34}>
 					<p
-						className="mt-3 text-center text-ink-light font-sans"
+						className="mt-4 text-center text-ink-light font-sans"
 						style={{ fontSize: 'clamp(0.8rem, 3.2vw, 1rem)', letterSpacing: '0.28em' }}
 					>
 						{t('dateShort')}
@@ -86,7 +90,7 @@ export function CoverSection() {
 
 				{/* Countdown */}
 				<Reveal delay={0.42}>
-					<div className="mt-10 sm:mt-12">
+					<div className="mt-14 sm:mt-16">
 						<Countdown target={WEDDING.dateIso} />
 					</div>
 				</Reveal>

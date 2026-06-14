@@ -19,5 +19,7 @@ export const WEDDING = {
 		telegram: 'https://t.me/valuyevaa',
 		telegramLabel: '@valuyevaa',
 	},
+	// Ссылка-приглашение в Telegram-чат для гостей (вставьте URL вида https://t.me/+xxxxx).
+	guestChatTelegram: '',
 	domain: 'kazak-av.site',
 } as const

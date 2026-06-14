@@ -10,18 +10,21 @@ export function FooterSection() {
 
 	return (
 		<footer
-			className='px-6 sm:px-12 pt-10 pb-14 text-center safe-x'
+			className='px-6 sm:px-12  text-center safe-x'
 			style={{paddingBottom: 'max(3.5rem, env(safe-area-inset-bottom))'}}
 		>
 			<Reveal variant='fadeIn'>
+				<div className='flex items-center justify-center my-12'>
+
 				<p
-					className='font-signature text-ink leading-[1.05]'
+					className='font-signature text-ink leading-[1.05] flex items-center justify-center text-center wrap-break-word'
 					style={{fontSize: 'clamp(2.75rem, 11vw, 4.5rem)'}}
 				>
 					{t('signature')}
 				</p>
+				</div>
 
-				<div className='mt-7 flex items-center justify-center gap-3'>
+				<div className='mt-7 flex items-center justify-center gap-6'>
 					<span className='h-px w-8 md:w-20 shrink-0 bg-ink/30' />
 
 					<p className='flex items-center gap-2 whitespace-nowrap font-serif text-base leading-none text-ink tracking-wider'>

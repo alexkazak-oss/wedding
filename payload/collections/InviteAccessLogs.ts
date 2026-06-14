@@ -2,6 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 export const InviteAccessLogs: CollectionConfig = {
 	slug: 'invite-access-logs',
+	labels: {
+		singular: 'Запись доступа',
+		plural: 'Журнал доступа',
+	},
 	admin: {
 		useAsTitle: 'event',
 		defaultColumns: ['invite', 'event', 'userAgent', 'createdAt'],

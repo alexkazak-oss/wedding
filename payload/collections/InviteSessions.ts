@@ -2,6 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 export const InviteSessions: CollectionConfig = {
 	slug: 'invite-sessions',
+	labels: {
+		singular: 'Сессия устройства',
+		plural: 'Сессии устройств',
+	},
 	admin: {
 		useAsTitle: 'sessionHash',
 		defaultColumns: ['invite', 'userAgent', 'createdAt', 'lastSeenAt'],

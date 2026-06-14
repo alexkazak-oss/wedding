@@ -33,10 +33,10 @@
 	"timing": {
 		"title": "Programma",
 		"items": [
-			{ "time": "15:00", "label": "arrivo degli ospiti" },
-			{ "time": "16:00", "label": "cerimonia" },
-			{ "time": "17:00", "label": "banchetto" },
-			{ "time": "23:00", "label": "finale" }
+			{ "time": "15:30", "label": "Arrivo degli ospiti & rinfresco" },
+			{ "time": "16:20", "label": "Cerimonia" },
+			{ "time": "17:30", "label": "Cena di gala" },
+			{ "time": "23:00", "label": "Afterparty" }
 		]
 	},
 	"details": {
@@ -47,7 +47,8 @@
 		"giftsText2": "Per favore, lasciate i vostri bambini a casa per potervi rilassare completamente e godere di questo giorno insieme a noi",
 		"organizerIntro": "Se avete domande o problemi, potete contattare la nostra meravigliosa organizzatrice",
 		"organizerName": "Alesya",
-		"callbackMessage": "Vi preghiamo di confermare la vostra presenza al matrimonio entro il 20.08.26"
+		"callbackMessage": "Vi preghiamo di confermare la vostra presenza al matrimonio entro il 20.08.26",
+		"guestChatLabel": "Chat degli ospiti su Telegram"
 	},
 	"signature": "With love, A. and V.",
 	"nav": {

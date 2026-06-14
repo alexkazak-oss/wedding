@@ -46,6 +46,10 @@ const addInviteUrl: CollectionAfterReadHook = ({ doc }) => {
 
 export const Invites: CollectionConfig = {
 	slug: 'invites',
+	labels: {
+		singular: 'Приглашение',
+		plural: 'Приглашения',
+	},
 	admin: {
 		useAsTitle: 'displayNames',
 		defaultColumns: ['displayNames', 'inviteUrl', 'locale', 'rsvpStatus', 'createdAt'],

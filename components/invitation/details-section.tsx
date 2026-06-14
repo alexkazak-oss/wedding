@@ -5,12 +5,13 @@ import { WEDDING } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 
+// 7 цветов (не 8 — иначе на мобильном последний кружок переносится на новую строку).
+// Порядок при желании можно поменять позже.
 const palette = [
 	{ name: 'Pastel Yellow', hex: '#EFE6B4' },
 	{ name: 'Winter Pear', hex: '#B3B490' },
 	{ name: 'Peach Cobbler', hex: '#F4B58A' },
 	{ name: 'Olive Branch', hex: '#6A6A48' },
-	{ name: 'Almond Blossom', hex: '#46362F' },
 	{ name: 'Dusty Rose', hex: '#B37D7F' },
 	{ name: 'Morron Terracotta', hex: '#845540' },
 	{ name: 'Chocolate Lab', hex: '#573F36' },
@@ -92,6 +93,28 @@ export function DetailsSection() {
 							{WEDDING.organizer.telegramLabel}
 						</a>
 					</div>
+				</div>
+			</Reveal>
+
+			{/* Уведомление о присутствии + чат гостей */}
+			<Reveal delay={0.3}>
+				<div className="mt-12 mx-auto max-w-md">
+					<p className="font-serif italic text-base sm:text-lg text-ink leading-[1.6]">
+						{t('callbackMessage')}
+					</p>
+					{WEDDING.guestChatTelegram ? (
+						<a
+							href={WEDDING.guestChatTelegram}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink text-cream px-5 py-2.5 text-xs uppercase tracking-[0.14em] font-sans hover:bg-ink-light transition-colors"
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="shrink-0">
+								<path d="M21.95 4.5 18.4 19.83c-.27 1.17-.97 1.47-1.97.92l-5.45-4.02-2.63 2.54c-.29.29-.54.54-1.1.54l.4-5.58 10.16-9.18c.44-.4-.1-.62-.69-.22L4.55 11.35-.86 9.66c-1.17-.37-1.2-1.17.25-1.73L20.37 2.78c.97-.36 1.83.22 1.58 1.72z" />
+							</svg>
+							{t('guestChatLabel')}
+						</a>
+					) : null}
 				</div>
 			</Reveal>
 		</section>
