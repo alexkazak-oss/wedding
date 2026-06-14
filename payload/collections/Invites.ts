@@ -1,4 +1,9 @@
-import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
+import type {
+	CollectionAfterReadHook,
+	CollectionBeforeChangeHook,
+	CollectionBeforeDeleteHook,
+	CollectionConfig,
+} from 'payload'
 import { generateInviteToken, hashToken } from '@/lib/invite/token'
 
 const beforeCreateGenerateToken: CollectionBeforeChangeHook = async ({ data, operation }) => {
@@ -13,11 +18,37 @@ const beforeCreateGenerateToken: CollectionBeforeChangeHook = async ({ data, ope
 	}
 }
 
+// Перед удалением приглашения удаляем связанные сессии и логи.
+// Иначе FK ON DELETE SET NULL конфликтует с NOT NULL (invite — required) и удаление падает.
+const cleanupRelatedRecords: CollectionBeforeDeleteHook = async ({ id, req }) => {
+	await req.payload.delete({
+		collection: 'invite-sessions',
+		where: { invite: { equals: id } },
+		overrideAccess: true,
+		req,
+	})
+	await req.payload.delete({
+		collection: 'invite-access-logs',
+		where: { invite: { equals: id } },
+		overrideAccess: true,
+		req,
+	})
+}
+
+// Собирает готовую короткую ссылку вида {site}/{locale}/{token} для копирования в админке.
+const addInviteUrl: CollectionAfterReadHook = ({ doc }) => {
+	if (doc?.tokenRaw && doc?.locale) {
+		const site = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
+		doc.inviteUrl = `${site}/${doc.locale}/${doc.tokenRaw}`
+	}
+	return doc
+}
+
 export const Invites: CollectionConfig = {
 	slug: 'invites',
 	admin: {
 		useAsTitle: 'displayNames',
-		defaultColumns: ['displayNames', 'locale', 'openedAt', 'rsvpStatus', 'createdAt'],
+		defaultColumns: ['displayNames', 'inviteUrl', 'locale', 'rsvpStatus', 'createdAt'],
 		description:
 			'Персональные приглашения. На первом открытии данные замораживаются в snapshot.',
 	},
@@ -29,6 +60,8 @@ export const Invites: CollectionConfig = {
 	},
 	hooks: {
 		beforeChange: [beforeCreateGenerateToken],
+		beforeDelete: [cleanupRelatedRecords],
+		afterRead: [addInviteUrl],
 	},
 	fields: [
 		{
@@ -68,6 +101,43 @@ export const Invites: CollectionConfig = {
 							defaultValue: 1,
 							min: 1,
 							max: 20,
+							label: 'Сколько гостей в приглашении',
+						},
+						{
+							type: 'row',
+							fields: [
+								{
+									name: 'email',
+									type: 'email',
+									label: 'E-mail для отправки',
+									admin: {
+										width: '50%',
+										description: 'Куда отправить приглашение (необязательно)',
+									},
+								},
+								{
+									name: 'phone',
+									type: 'text',
+									label: 'Телефон для отправки',
+									admin: {
+										width: '50%',
+										description: 'WhatsApp / Telegram / SMS (необязательно)',
+									},
+								},
+							],
+						},
+						{
+							name: 'inviteUrl',
+							type: 'text',
+							virtual: true,
+							label: 'Ссылка для гостя',
+							admin: {
+								readOnly: true,
+								components: {
+									Field: '@/components/payload/copy-invite-link#CopyLinkField',
+									Cell: '@/components/payload/copy-invite-link#CopyLinkCell',
+								},
+							},
 						},
 					],
 				},

@@ -17,13 +17,12 @@ export function GreetingSection({ overrideTitle, overrideText }: GreetingSection
 	return (
 		<section id="greeting" className="px-6 sm:px-12 py-14 text-center">
 			<Reveal>
-				<h2 className="font-serif font-semibold text-2xl sm:text-3xl text-ink tracking-wide">
+				<h2 className="font-serif font-semibold text-2xl sm:text-5xl text-ink tracking-wide">
 					{title}
 				</h2>
 			</Reveal>
-
 			<Reveal delay={0.1}>
-				<p className="mt-5 max-w-md mx-auto text-sm sm:text-base text-ink-light font-sans leading-[1.8]">
+				<p className="mt-5 max-w-md  mx-auto text-xl sm:text-2xl text-ink-light font-serif leading-[1.8]">
 					{text}
 				</p>
 			</Reveal>

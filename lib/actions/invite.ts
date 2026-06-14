@@ -29,6 +29,8 @@ export interface PayloadInvite {
 	partnerLastName?: string | null
 	locale: Locale
 	maxGuests: number
+	email?: string | null
+	phone?: string | null
 	rsvpStatus: 'pending' | 'accepted' | 'declined'
 	guestCount: number
 	comment?: string | null
@@ -54,9 +56,14 @@ async function readUserAgent() {
 
 export type OpenInviteResult =
 	| { state: 'ok'; invite: PayloadInvite }
-	| { state: 'verify'; inviteId: string | number; needsLastName: boolean }
 	| { state: 'not_found' }
 
+/**
+ * Открытие приглашения по ссылке (токену). Владение ссылкой = доступ,
+ * поэтому страница открывается на любом устройстве без проверки личности.
+ * Эта функция вызывается при рендере страницы, поэтому НЕ пишет cookie
+ * (Next.js это запрещает в Server Component) — сессию ставит claimInviteSession.
+ */
 export async function openInviteByToken(rawToken: string): Promise<OpenInviteResult> {
 	const tokenHash = hashToken(rawToken)
 	const p = await payload()
@@ -71,90 +78,77 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 	const invite = found.docs[0] as PayloadInvite | undefined
 	if (!invite) return { state: 'not_found' }
 
-	const sessionRaw = await getInviteSessionCookie()
-	if (sessionRaw) {
-		const sessionLookup = await p.find({
+	const now = new Date().toISOString()
+
+	// Первое открытие — замораживаем snapshot и пишем в лог.
+	if (!invite.openedAt) {
+		const snapshot: InviteSnapshot = {
+			greeting: invite.greeting,
+			displayNames: invite.displayNames,
+			maxGuests: invite.maxGuests,
+			locale: invite.locale,
+			openedAt: now,
+		}
+		const updated = await p.update({
+			collection: 'invites',
+			id: invite.id,
+			data: { openedAt: now, lastSeenAt: now, frozenSnapshot: snapshot },
+			overrideAccess: true,
+		})
+		await p.create({
+			collection: 'invite-access-logs',
+			data: { invite: invite.id, event: 'opened', userAgent: await readUserAgent() },
+			overrideAccess: true,
+		})
+		return { state: 'ok', invite: updated as unknown as PayloadInvite }
+	}
+
+	await p.update({
+		collection: 'invites',
+		id: invite.id,
+		data: { lastSeenAt: now },
+		overrideAccess: true,
+	})
+	return { state: 'ok', invite }
+}
+
+/**
+ * Ставит cookie-сессию для устройства, открывшего ссылку, чтобы при заходе
+ * на главную (/{locale}) гостя сразу редиректило на его приглашение.
+ * Вызывается из клиента (Server Action) — запись cookie здесь разрешена.
+ */
+export async function claimInviteSession(rawToken: string): Promise<void> {
+	const tokenHash = hashToken(rawToken)
+	const p = await payload()
+
+	const found = await p.find({
+		collection: 'invites',
+		where: { tokenHash: { equals: tokenHash } },
+		limit: 1,
+		overrideAccess: true,
+	})
+	const invite = found.docs[0] as PayloadInvite | undefined
+	if (!invite) return
+
+	// Уже есть валидная сессия именно для этого приглашения — ничего не делаем.
+	const existing = await getInviteSessionCookie()
+	if (existing) {
+		const look = await p.find({
 			collection: 'invite-sessions',
-			where: { sessionHash: { equals: hashSession(sessionRaw) } },
+			where: { sessionHash: { equals: hashSession(existing) } },
 			limit: 1,
 			overrideAccess: true,
 		})
-		const session = sessionLookup.docs[0] as unknown as
-			| { id: string | number; invite: string | number | { id: string | number } }
+		const s = look.docs[0] as unknown as
+			| { invite: string | number | { id: string | number } }
 			| undefined
-
-		if (session) {
-			const sessionInviteId =
-				typeof session.invite === 'object' && session.invite !== null
-					? session.invite.id
-					: session.invite
-
-			if (String(sessionInviteId) === String(invite.id)) {
-				const now = new Date().toISOString()
-				await p.update({
-					collection: 'invite-sessions',
-					id: session.id,
-					data: { lastSeenAt: now },
-					overrideAccess: true,
-				})
-				await p.update({
-					collection: 'invites',
-					id: invite.id,
-					data: { lastSeenAt: now },
-					overrideAccess: true,
-				})
-				return { state: 'ok', invite }
-			}
+		if (s) {
+			const sid = typeof s.invite === 'object' && s.invite !== null ? s.invite.id : s.invite
+			if (String(sid) === String(invite.id)) return
 		}
 	}
 
-	if (!invite.openedAt) {
-		const updated = await freezeAndStartSession(invite)
-		return { state: 'ok', invite: updated }
-	}
-
-	return {
-		state: 'verify',
-		inviteId: invite.id,
-		needsLastName: Boolean(invite.lastName),
-	}
-}
-
-async function freezeAndStartSession(invite: PayloadInvite): Promise<PayloadInvite> {
-	const p = await payload()
-	const now = new Date().toISOString()
-
-	const snapshot: InviteSnapshot = {
-		greeting: invite.greeting,
-		displayNames: invite.displayNames,
-		maxGuests: invite.maxGuests,
-		locale: invite.locale,
-		openedAt: now,
-	}
-
-	const updated = await p.update({
-		collection: 'invites',
-		id: invite.id,
-		data: {
-			openedAt: now,
-			lastSeenAt: now,
-			frozenSnapshot: snapshot,
-		},
-		overrideAccess: true,
-	})
-
-	await p.create({
-		collection: 'invite-access-logs',
-		data: {
-			invite: invite.id,
-			event: 'opened',
-			userAgent: await readUserAgent(),
-		},
-		overrideAccess: true,
-	})
-
 	await issueSessionCookie(invite.id)
-	return updated as unknown as PayloadInvite
 }
 
 async function issueSessionCookie(inviteId: string | number) {
@@ -176,58 +170,77 @@ async function issueSessionCookie(inviteId: string | number) {
 	await setInviteSessionCookie(raw)
 }
 
-// ─── Public: verify by first/last name ───────────────
+// ─── Public: recover invite by name (home-page gate) ──
 
-const verifySchema = z.object({
-	inviteId: z.union([z.string(), z.number()]),
+const findSchema = z.object({
 	firstName: z.string().min(1).max(80),
-	lastName: z.string().max(80).optional(),
+	lastName: z.string().min(1).max(80),
 })
 
-export async function verifyGuestByName(input: {
-	inviteId: string | number
+export type FindInviteResult =
+	| { ok: true; locale: Locale; token: string }
+	| { ok: false; error: string }
+
+/**
+ * Поиск приглашения по имени и фамилии среди всех приглашений.
+ * Совпадение по любому из гостей группы (основной или партнёр) —
+ * достаточно данных одного человека, чтобы открыть общее приглашение.
+ */
+export async function findInviteByName(input: {
 	firstName: string
-	lastName?: string
-}) {
-	const parsed = verifySchema.safeParse(input)
-	if (!parsed.success) return { ok: false as const, error: 'Invalid input' }
-
-	const p = await payload()
-	const found = (await p.findByID({
-		collection: 'invites',
-		id: parsed.data.inviteId,
-		overrideAccess: true,
-	})) as unknown as PayloadInvite | null
-
-	if (!found) return { ok: false as const, error: 'Not found' }
-
-	const candidates: Array<{ first: string; last: string | null }> = [
-		{ first: found.firstName, last: found.lastName ?? null },
-	]
-	if (found.partnerFirstName) {
-		candidates.push({ first: found.partnerFirstName, last: found.partnerLastName ?? null })
+	lastName: string
+}): Promise<FindInviteResult> {
+	const parsed = findSchema.safeParse(input)
+	if (!parsed.success) {
+		return { ok: false, error: 'Введите имя и фамилию.' }
 	}
 
-	const inputName = { first: parsed.data.firstName, last: parsed.data.lastName ?? null }
-	const matched = candidates.some((c) => namesMatch(c, inputName))
+	const p = await payload()
+	const all = await p.find({
+		collection: 'invites',
+		limit: 1000,
+		overrideAccess: true,
+	})
 
-	if (!matched) {
-		await p.create({
-			collection: 'invite-access-logs',
-			data: { invite: found.id, event: 'verify_failed', userAgent: await readUserAgent() },
-			overrideAccess: true,
-		})
-		return { ok: false as const, error: 'Имя не совпало с приглашением' }
+	const inputName = { first: parsed.data.firstName, last: parsed.data.lastName }
+
+	const matches = (all.docs as unknown as PayloadInvite[]).filter((invite) => {
+		const candidates: Array<{ first: string; last: string | null }> = [
+			{ first: invite.firstName, last: invite.lastName ?? null },
+		]
+		if (invite.partnerFirstName) {
+			candidates.push({ first: invite.partnerFirstName, last: invite.partnerLastName ?? null })
+		}
+		return candidates.some((c) => namesMatch(c, inputName))
+	})
+
+	if (matches.length === 0) {
+		return {
+			ok: false,
+			error: 'Мы не нашли вас в списке гостей. Проверьте имя и фамилию.',
+		}
+	}
+
+	if (matches.length > 1) {
+		return {
+			ok: false,
+			error: 'Найдено несколько совпадений. Откройте приглашение по персональной ссылке.',
+		}
+	}
+
+	const invite = matches[0]
+	if (!invite.tokenRaw) {
+		return { ok: false, error: 'Ссылка приглашения недоступна. Свяжитесь с организаторами.' }
 	}
 
 	await p.create({
 		collection: 'invite-access-logs',
-		data: { invite: found.id, event: 'verify_ok', userAgent: await readUserAgent() },
+		data: { invite: invite.id, event: 'verify_ok', userAgent: await readUserAgent() },
 		overrideAccess: true,
 	})
 
-	await issueSessionCookie(found.id)
-	return { ok: true as const }
+	await issueSessionCookie(invite.id)
+	return { ok: true, locale: invite.locale, token: invite.tokenRaw }
 }
 
 // ─── Public: read current invite via cookie ──────────
@@ -253,10 +266,12 @@ export async function getCurrentInvite(): Promise<PayloadInvite | null> {
 			? session.invite.id
 			: session.invite
 
+	// disableErrors: вернуть null, а не бросать, если приглашение удалили в админке.
 	const invite = (await p.findByID({
 		collection: 'invites',
 		id: inviteId,
 		overrideAccess: true,
+		disableErrors: true,
 	})) as unknown as PayloadInvite | null
 
 	return invite ?? null

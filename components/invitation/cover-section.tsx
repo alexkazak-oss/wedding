@@ -18,10 +18,11 @@ export function CoverSection() {
 	return (
 		<section className="relative bg-cream">
 			{/* Top bar — safe-area aware */}
-			<div className="safe-top safe-x absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3">
+			<div className="safe-top safe-x absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 mt-5 md:mt-8 mx-6">
 				<AddToCalendar
 					title={eventTitle}
 					description={eventDescription}
+
 					location={eventLocation}
 					startDate={WEDDING.dateIso}
 					endDate={WEDDING.endDateIso}
@@ -30,28 +31,13 @@ export function CoverSection() {
 			</div>
 
 			<div className="relative px-5 xs:px-6 sm:px-12 pt-[clamp(4.5rem,18vw,6.5rem)] pb-12 sm:pb-14">
-				{/* Vertical date stack — top-right */}
-				<Reveal variant="fadeIn">
-					<div className="flex justify-start">
-						<div className="flex items-stretch gap-4 sm:gap-6">
-							<div className="w-px bg-ink/80 self-stretch" />
-							<div
-								className="font-serif text-ink leading-[1.15] tracking-wide font-light text-right"
-								style={{ fontSize: 'clamp(1.5rem, 6vw, 1.875rem)' }}
-							>
-								<div>{t('day')}</div>
-								<div>{t('month')}</div>
-								<div>{t('year')}</div>
-							</div>
-						</div>
-					</div>
-				</Reveal>
+
 
 				{/* Names */}
 				<div className="mt-8 sm:mt-14 text-center">
 					<Reveal delay={0.05}>
 						<h1
-							className="font-serif font-light text-ink uppercase tracking-[0.01em] leading-[1.02] wrap-break-word"
+							className="font-serif font-light text-ink tracking-[0.01em] leading-[1.02] wrap-break-word"
 							style={{ fontSize: 'clamp(2rem, 9.5vw, 4.5rem)' }}
 						>
 							{t('bride')}
@@ -60,7 +46,7 @@ export function CoverSection() {
 
 					<Reveal delay={0.12}>
 						<p
-							className="font-script text-ink/85 leading-none my-1 sm:my-2"
+							className="font-signature text-ink/85 leading-none my-1 sm:my-2"
 							style={{ fontSize: 'clamp(1.75rem, 7vw, 2.5rem)' }}
 							aria-hidden="true"
 						>
@@ -70,7 +56,7 @@ export function CoverSection() {
 
 					<Reveal delay={0.18}>
 						<h1
-							className="font-serif font-light text-ink uppercase tracking-[0.01em] leading-[1.02] wrap-break-word"
+							className="font-serif font-light text-ink tracking-[0.01em] leading-[1.02] wrap-break-word"
 							style={{ fontSize: 'clamp(2rem, 9.5vw, 4.5rem)' }}
 						>
 							{t('groom')}

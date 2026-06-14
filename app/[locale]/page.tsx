@@ -1,36 +1,25 @@
-import { InvitationCard } from '@/components/layout/invitation-card';
-import { Divider } from '@/components/ui/divider';
-import {
-  CoverSection,
-  GreetingSection,
-  LocationSection,
-  TimingSection,
-  DetailsSection,
-  FooterSection,
-} from '@/components/invitation';
-import { setRequestLocale } from 'next-intl/server';
+import { NameGate } from '@/components/invite/name-gate'
+import { getCurrentInvite } from '@/lib/actions/invite'
+import { redirect } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
 
-export default async function InvitationPage({
-  params,
+// Главная зависит от сессии и живых данных — без кэша.
+export const dynamic = 'force-dynamic'
+
+type Locale = 'ru' | 'it'
+
+export default async function HomePage({
+	params,
 }: {
-  params: Promise<{ locale: string }>;
+	params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+	const { locale } = await params
+	setRequestLocale(locale)
 
-  return (
-    <InvitationCard>
-      <CoverSection />
-      <Divider ornament />
-      <GreetingSection />
-      <Divider ornament />
-      <LocationSection />
-      <Divider ornament />
-      <TimingSection />
-      <Divider ornament />
-      <DetailsSection />
-      <Divider ornament />
-      <FooterSection />
-    </InvitationCard>
-  );
+	const invite = await getCurrentInvite()
+	if (invite?.tokenRaw) {
+		redirect(`/${invite.locale}/${invite.tokenRaw}`)
+	}
+
+	return <NameGate locale={(locale as Locale) === 'it' ? 'it' : 'ru'} />
 }

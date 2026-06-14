@@ -1,8 +1,24 @@
 import { routing } from '@/lib/i18n/routing'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Inter, Marck_Script, Monsieur_La_Doulaise } from 'next/font/google'
 import { notFound } from 'next/navigation'
+
+import '../globals.css'
+
+export const metadata: Metadata = {
+	title: 'Владислава и Александр · 08.09.2026',
+	description: 'Мы женимся! Приглашаем Вас на нашу свадьбу 8 сентября 2026',
+}
+
+export const viewport: Viewport = {
+	width: 'device-width',
+	initialScale: 1,
+	maximumScale: 5,
+	viewportFit: 'cover',
+	themeColor: '#F5F1EA',
+}
 
 const cormorant = Cormorant_Garamond({
 	subsets: ['latin', 'cyrillic'],
@@ -54,7 +70,11 @@ export default async function LocaleLayout({
 	const messages = await getMessages()
 
 	return (
-		<html lang={locale} className={`${cormorant.variable} ${inter.variable} ${marckScript.variable} ${signatureFont.variable}`} data-scroll-behavior="smooth">
+		<html
+			lang={locale}
+			className={`${cormorant.variable} ${inter.variable} ${marckScript.variable} ${signatureFont.variable}`}
+			data-scroll-behavior="smooth"
+		>
 			<body className="min-h-screen antialiased">
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					{children}
