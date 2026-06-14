@@ -35,6 +35,9 @@ export default async function InvitePage({
 	const { invite } = result
 	// Живое значение из админки (без заморозки) — чтобы правки сразу отражались.
 	const greeting = invite.greeting
+	// Число гостей: реальный список, иначе плановое значение. Влияет на форму
+	// обращения в приветствии (1 → «ты/te», больше → «вы/voi»).
+	const guestCount = invite.guests?.length || invite.maxGuests || 1
 
 	const sections = await getTranslations('sections')
 
@@ -43,7 +46,7 @@ export default async function InvitePage({
 			<ClaimSession token={token} />
 			<CoverSection />
 			<SectionDivider label={sections('greeting')} />
-			<GreetingSection overrideTitle={greeting} />
+			<GreetingSection overrideTitle={greeting} guestCount={guestCount} />
 			<SectionDivider label={sections('location')} />
 			<LocationSection />
 			<SectionDivider label={sections('timing')} />

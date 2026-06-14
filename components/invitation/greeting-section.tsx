@@ -6,13 +6,19 @@ import { useTranslations } from 'next-intl'
 interface GreetingSectionProps {
 	overrideTitle?: string | null
 	overrideText?: string | null
+	/** Число гостей в приглашении — для формы обращения (1 → «ты/te», >1 → «вы/voi»). */
+	guestCount?: number
 }
 
-export function GreetingSection({ overrideTitle, overrideText }: GreetingSectionProps = {}) {
+export function GreetingSection({
+	overrideTitle,
+	overrideText,
+	guestCount = 1,
+}: GreetingSectionProps = {}) {
 	const t = useTranslations('greeting')
 
 	const title = overrideTitle?.trim() || t('title')
-	const text = overrideText?.trim() || t('text')
+	const text = overrideText?.trim() || t('text', { count: guestCount })
 
 	return (
 		<section id="greeting" className="px-6 sm:px-12 py-14 text-center">

@@ -28,7 +28,7 @@
 	},
 	"greeting": {
 		"title": "Cari ospiti!",
-		"text": "Senza di voi il nostro matrimonio non sarà così sentito e memorabile. Vi invitiamo a condividere questo giorno insieme a noi."
+		"text": "{count, plural, =1 {Senza di te il nostro matrimonio non sarà così sentito e memorabile. Ti invitiamo a condividere questo giorno insieme a noi.} other {Senza di voi il nostro matrimonio non sarà così sentito e memorabile. Vi invitiamo a condividere questo giorno insieme a noi.}}"
 	},
 	"location": {
 		"title": "Location",

@@ -75,7 +75,10 @@ export default async function LocaleLayout({
 			className={`${cormorant.variable} ${inter.variable} ${marckScript.variable} ${signatureFont.variable}`}
 			data-scroll-behavior="smooth"
 		>
-			<body className="min-h-screen antialiased">
+			{/* suppressHydrationWarning: расширения браузера (напр. ColorZilla
+			    добавляет cz-shortcut-listen) дописывают атрибуты в <body> до
+			    гидрации — это не наш рассинхрон, глушим предупреждение. */}
+			<body className="min-h-screen antialiased" suppressHydrationWarning>
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					{children}
 				</NextIntlClientProvider>
