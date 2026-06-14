@@ -69,8 +69,7 @@ export function AddToCalendar({
 			onClick={handleClick}
 			className={cn(
 				'inline-flex items-center justify-center rounded-full',
-				'bg-ink text-cream',
-				// Мобильный — круглая иконка без текста; от sm — пилюля с подписью
+				'bg-ink text-cream opacity-70',
 				'size-9 sm:size-auto sm:gap-2 sm:px-4 sm:py-2',
 				'text-[11px] sm:text-xs',
 				'font-sans tracking-[0.04em]',

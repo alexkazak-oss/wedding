@@ -22,7 +22,7 @@ function Corner({ className }: { className: string }) {
 			unoptimized
 			priority
 			className={cn(
-				'pointer-events-none select-none absolute z-10 w-20 sm:w-28 md:w-28 h-auto',
+				'pointer-events-none select-none absolute z-10 w-20 sm:w-28 md:w-28 h-auto opacity-60',
 				className,
 			)}
 		/>
