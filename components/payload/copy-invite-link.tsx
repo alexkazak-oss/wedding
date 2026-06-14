@@ -2,13 +2,23 @@
 
 import { toast, useField } from '@payloadcms/ui'
 import type { DefaultCellComponentProps } from 'payload'
+import { useEffect, useState } from 'react'
 
 // ─── shared helpers ──────────────────────────────────
 
-// Детерминированно (без window) — чтобы не было hydration-mismatch.
-function buildUrl(token?: string | null, locale?: string | null): string {
+// База ссылки: NEXT_PUBLIC_SITE_URL, иначе — текущий origin админки.
+// origin ставим в useEffect (после гидрации), чтобы не было hydration-mismatch.
+function useBaseUrl(): string {
+	const env = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '')
+	const [origin, setOrigin] = useState('')
+	useEffect(() => {
+		if (!env && typeof window !== 'undefined') setOrigin(window.location.origin)
+	}, [env])
+	return env || origin
+}
+
+function buildUrl(base: string, token?: string | null, locale?: string | null): string {
 	if (!token) return ''
-	const base = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '')
 	return `${base}/${locale ?? 'ru'}/${token}`
 }
 
@@ -70,20 +80,19 @@ function CopyPill({ url, large }: { url: string; large?: boolean }) {
 // ─── List view cell ──────────────────────────────────
 
 export function CopyLinkCell(props: DefaultCellComponentProps) {
-	const { cellData, rowData } = props
-	const url =
-		(typeof cellData === 'string' && cellData) ||
-		buildUrl(rowData?.tokenRaw as string, rowData?.locale as string)
+	const { rowData } = props
+	const base = useBaseUrl()
+	const url = buildUrl(base, rowData?.tokenRaw as string, rowData?.locale as string)
 	return <CopyPill url={url} />
 }
 
 // ─── Edit view field ─────────────────────────────────
 
-export function CopyLinkField({ path }: { path: string }) {
-	const { value } = useField<string>({ path })
+export function CopyLinkField() {
+	const base = useBaseUrl()
 	const { value: tokenRaw } = useField<string>({ path: 'tokenRaw' })
 	const { value: locale } = useField<string>({ path: 'locale' })
-	const url = value || buildUrl(tokenRaw, locale)
+	const url = buildUrl(base, tokenRaw, locale)
 
 	return (
 		<div className="field-type" style={{ marginBottom: 'var(--base)' }}>
