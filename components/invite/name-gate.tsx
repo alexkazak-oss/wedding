@@ -26,7 +26,7 @@ const COPY: Record<
 		pending: 'Ищем…',
 	},
 	it: {
-		title: 'Benvenuti',
+		title: 'Benvenuto',
 		subtitle: 'Inserisci nome e cognome per aprire il tuo invito.',
 		first: 'Nome',
 		last: 'Cognome',
