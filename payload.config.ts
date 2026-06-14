@@ -13,6 +13,11 @@ import { Users } from './payload/collections/Users'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const connectionString = process.env.DATABASE_URI
+if (!connectionString) {
+	throw new Error('DATABASE_URI is not set — проверь переменные окружения (в т.ч. Production на Vercel)')
+}
+
 export default buildConfig({
 	admin: {
 		user: Users.slug,
@@ -38,12 +43,17 @@ export default buildConfig({
 	},
 	db: postgresAdapter({
 		pool: {
-			connectionString: process.env.DATABASE_URI || 'http://localhost:3000',
+			connectionString,
 			// Serverless (Vercel): держим минимум соединений на инстанс, чтобы не
 			// исчерпать пул Supabase. На проде используйте transaction-пул (порт 6543).
 			max: 1,
 			idleTimeoutMillis: 10_000,
 		},
 		schemaName: 'payload',
+		// Схема ведётся вручную через supabase/schema.sql, поэтому отключаем
+		// dev-push: иначе при каждом старте drizzle-kit интроспектит удалённую
+		// Supabase по сети («Pulling schema from database…») — очень медленно.
+		// Чтобы временно включить авто-push, выставь PAYLOAD_DEV_PUSH=true.
+		push: process.env.PAYLOAD_DEV_PUSH === 'true',
 	}),
 })
