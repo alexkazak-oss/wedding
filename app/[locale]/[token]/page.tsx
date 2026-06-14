@@ -14,9 +14,10 @@ import { openInviteByToken } from '@/lib/actions/invite'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
-// Всегда рендерим заново, чтобы правки/удаление в админке сразу были видны гостю.
-export const dynamic = 'force-dynamic'
-
+// Страница кэшируется (Data Cache + полный кэш маршрута по токену), поэтому
+// 500 заходов обслуживаются без обращений к БД. Свежесть данных обеспечивает
+// revalidateTag(invite:{tokenHash}) из хуков коллекции Invites — правки и
+// удаление в админке мгновенно сбрасывают кэш конкретного приглашения.
 export default async function InvitePage({
 	params,
 }: {

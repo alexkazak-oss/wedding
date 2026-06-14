@@ -1,9 +1,13 @@
 import type {
+	CollectionAfterChangeHook,
+	CollectionAfterDeleteHook,
 	CollectionAfterReadHook,
 	CollectionBeforeChangeHook,
 	CollectionBeforeDeleteHook,
 	CollectionConfig,
 } from 'payload'
+import { revalidateTag } from 'next/cache'
+import { inviteTag } from '@/lib/invite/cache'
 import { generateInviteToken, hashToken } from '@/lib/invite/token'
 
 const beforeCreateGenerateToken: CollectionBeforeChangeHook = async ({ data, operation }) => {
@@ -33,6 +37,49 @@ const cleanupRelatedRecords: CollectionBeforeDeleteHook = async ({ id, req }) =>
 		overrideAccess: true,
 		req,
 	})
+}
+
+// Поля, влияющие на отрендеренную страницу приглашения. Кэш сбрасываем только
+// при их изменении — служебные записи (openedAt/lastSeenAt/frozenSnapshot из
+// claimInviteSession) кэш страницы не трогают.
+const RENDER_FIELDS = [
+	'greeting',
+	'displayNames',
+	'locale',
+	'attending',
+	'transport',
+	'allergies',
+	'alcohol',
+	'rsvpStatus',
+] as const
+
+// revalidateTag работает только в контексте запроса (server action / route
+// handler админки). Локальный API из скриптов/сидов контекста не имеет —
+// поэтому глушим возможную ошибку.
+function safeRevalidateInvite(tokenHash: unknown) {
+	if (typeof tokenHash !== 'string' || !tokenHash) return
+	try {
+		revalidateTag(inviteTag(tokenHash), 'max')
+	} catch {
+		// нет request-контекста — игнорируем
+	}
+}
+
+// Правка приглашения в админке сбрасывает кэш именно этой ссылки.
+const revalidateInviteCache: CollectionAfterChangeHook = ({ doc, previousDoc }) => {
+	const changed =
+		!previousDoc ||
+		RENDER_FIELDS.some(
+			(f) => JSON.stringify(doc?.[f]) !== JSON.stringify(previousDoc?.[f]),
+		)
+	if (changed) safeRevalidateInvite(doc?.tokenHash)
+	return doc
+}
+
+// Удаление приглашения сбрасывает кэш, чтобы страница отдала 404.
+const revalidateInviteCacheOnDelete: CollectionAfterDeleteHook = ({ doc }) => {
+	safeRevalidateInvite(doc?.tokenHash)
+	return doc
 }
 
 // Собирает готовую короткую ссылку вида {site}/{locale}/{token} для копирования в админке.
@@ -65,6 +112,8 @@ export const Invites: CollectionConfig = {
 	hooks: {
 		beforeChange: [beforeCreateGenerateToken],
 		beforeDelete: [cleanupRelatedRecords],
+		afterChange: [revalidateInviteCache],
+		afterDelete: [revalidateInviteCacheOnDelete],
 		afterRead: [addInviteUrl],
 	},
 	fields: [

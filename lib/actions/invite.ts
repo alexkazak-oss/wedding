@@ -11,8 +11,10 @@ import {
 	hashToken,
 	namesMatch,
 } from '@/lib/invite/token'
+import { inviteTag } from '@/lib/invite/cache'
 import type { InviteSnapshot, Locale } from '@/types'
 import { headers } from 'next/headers'
+import { revalidateTag, unstable_cache } from 'next/cache'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { z } from 'zod'
@@ -72,30 +74,85 @@ export type OpenInviteResult =
 	| { state: 'not_found' }
 
 /**
+ * Чистое чтение приглашения по хешу токена, закэшированное в Data Cache и
+ * помеченное тегом invite:{tokenHash}. На горячем пути (страница приглашения,
+ * force-dynamic снят) повторные заходы 500 гостей обслуживаются из кэша —
+ * БД не трогается. Инвалидация — revalidateTag из хуков коллекции Invites
+ * (правка в админке / сохранение анкеты). ВНУТРИ нельзя cookies/headers.
+ */
+function readInviteByTokenHash(tokenHash: string): Promise<PayloadInvite | null> {
+	return unstable_cache(
+		async (): Promise<PayloadInvite | null> => {
+			const p = await payload()
+			const found = await p.find({
+				collection: 'invites',
+				where: { tokenHash: { equals: tokenHash } },
+				limit: 1,
+				depth: 0, // у invites нет relationship-полей — не нужны JOIN'ы
+				pagination: false, // пропускаем лишний COUNT(*)
+				overrideAccess: true,
+			})
+			return (found.docs[0] as PayloadInvite | undefined) ?? null
+		},
+		['invite-by-token-hash', tokenHash],
+		// Тегируем для on-demand инвалидации + часовой backstop на случай,
+		// если ревалидация по какой-то причине не пришла.
+		{ tags: [inviteTag(tokenHash)], revalidate: 3600 },
+	)()
+}
+
+/**
  * Открытие приглашения по ссылке (токену). Владение ссылкой = доступ,
  * поэтому страница открывается на любом устройстве без проверки личности.
- * Эта функция вызывается при рендере страницы, поэтому НЕ пишет cookie
- * (Next.js это запрещает в Server Component) — сессию ставит claimInviteSession.
+ * Только чтение (кэшируется) — запись открытия/lastSeenAt делает
+ * claimInviteSession, который дёргается с клиента и кэшу не подлежит.
  */
 export async function openInviteByToken(rawToken: string): Promise<OpenInviteResult> {
-	const tokenHash = hashToken(rawToken)
+	const invite = await readInviteByTokenHash(hashToken(rawToken))
+	if (!invite) return { state: 'not_found' }
+	return { state: 'ok', invite }
+}
+
+/**
+ * Вызывается с клиента при открытии страницы приглашения (ClaimSession).
+ * Делает всё, что НЕ должно попадать в кэшируемый рендер:
+ *   1. трекинг открытия (snapshot при первом входе, лог, lastSeenAt с троттлингом);
+ *   2. cookie-сессию устройства — чтобы при заходе на главную гостя сразу
+ *      редиректило на его приглашение.
+ * Эта функция не кэшируется, поэтому здесь разрешены и записи, и cookie.
+ */
+export async function claimInviteSession(rawToken: string): Promise<void> {
 	const p = await payload()
 
+	// Свежее чтение (мимо кэша рендера) — нужны поля для snapshot и решения о записи.
 	const found = await p.find({
 		collection: 'invites',
-		where: { tokenHash: { equals: tokenHash } },
+		where: { tokenHash: { equals: hashToken(rawToken) } },
 		limit: 1,
-		depth: 0, // у invites нет relationship-полей — не нужны JOIN'ы
-		pagination: false, // пропускаем лишний COUNT(*) для метаданных пагинации
+		depth: 0,
+		pagination: false,
+		select: {
+			openedAt: true,
+			lastSeenAt: true,
+			greeting: true,
+			displayNames: true,
+			maxGuests: true,
+			locale: true,
+		},
 		overrideAccess: true,
 	})
-
-	const invite = found.docs[0] as PayloadInvite | undefined
-	if (!invite) return { state: 'not_found' }
+	const invite = found.docs[0] as
+		| Pick<
+				PayloadInvite,
+				'id' | 'openedAt' | 'lastSeenAt' | 'greeting' | 'displayNames' | 'maxGuests' | 'locale'
+		  >
+		| undefined
+	if (!invite) return
 
 	const now = new Date().toISOString()
 
-	// Первое открытие — замораживаем snapshot и пишем в лог.
+	// Трекинг открытия (записи). Поля openedAt/lastSeenAt/frozenSnapshot не входят
+	// в набор «рендерных» полей, поэтому хук afterChange кэш страницы не сбрасывает.
 	if (!invite.openedAt) {
 		const snapshot: InviteSnapshot = {
 			greeting: invite.greeting,
@@ -104,7 +161,7 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 			locale: invite.locale,
 			openedAt: now,
 		}
-		const updated = await p.update({
+		await p.update({
 			collection: 'invites',
 			id: invite.id,
 			data: { openedAt: now, lastSeenAt: now, frozenSnapshot: snapshot },
@@ -116,46 +173,21 @@ export async function openInviteByToken(rawToken: string): Promise<OpenInviteRes
 			data: { invite: invite.id, event: 'opened', userAgent: await readUserAgent() },
 			overrideAccess: true,
 		})
-		return { state: 'ok', invite: updated as unknown as PayloadInvite }
+	} else {
+		// Повторный визит: пишем lastSeenAt не чаще раза в LAST_SEEN_THROTTLE_MS.
+		const lastSeenMs = invite.lastSeenAt ? new Date(invite.lastSeenAt).getTime() : 0
+		if (Date.now() - lastSeenMs > LAST_SEEN_THROTTLE_MS) {
+			await p.update({
+				collection: 'invites',
+				id: invite.id,
+				data: { lastSeenAt: now },
+				depth: 0,
+				overrideAccess: true,
+			})
+		}
 	}
 
-	// Повторный визит: пишем lastSeenAt только если он устарел — иначе на каждый
-	// рендер force-dynamic-страницы был бы UPDATE одной и той же строки.
-	const lastSeenMs = invite.lastSeenAt ? new Date(invite.lastSeenAt).getTime() : 0
-	if (Date.now() - lastSeenMs > LAST_SEEN_THROTTLE_MS) {
-		await p.update({
-			collection: 'invites',
-			id: invite.id,
-			data: { lastSeenAt: now },
-			depth: 0,
-			overrideAccess: true,
-		})
-	}
-	return { state: 'ok', invite }
-}
-
-/**
- * Ставит cookie-сессию для устройства, открывшего ссылку, чтобы при заходе
- * на главную (/{locale}) гостя сразу редиректило на его приглашение.
- * Вызывается из клиента (Server Action) — запись cookie здесь разрешена.
- */
-export async function claimInviteSession(rawToken: string): Promise<void> {
-	const p = await payload()
-
-	// Находим id приглашения по токену (depth:0 → без JOIN'ов; select → только id).
-	const found = await p.find({
-		collection: 'invites',
-		where: { tokenHash: { equals: hashToken(rawToken) } },
-		limit: 1,
-		depth: 0,
-		pagination: false,
-		select: {},
-		overrideAccess: true,
-	})
-	const invite = found.docs[0] as { id: string | number } | undefined
-	if (!invite) return
-
-	// Уже есть валидная сессия именно для этого приглашения — ни одной записи в БД.
+	// Уже есть валидная сессия именно для этого приглашения — больше ничего не пишем.
 	const existing = await getInviteSessionCookie()
 	if (existing) {
 		const look = await p.find({
@@ -341,6 +373,11 @@ export async function saveRsvp(
 		},
 		overrideAccess: true,
 	})
+
+	// Гость правит свою же анкету и тут же делает router.refresh() — сбрасываем
+	// кэш немедленно (expire:0), чтобы он сразу увидел сохранённые ответы, а не
+	// stale-версию. (Хук afterChange тоже ревалидирует, но в режиме 'max'.)
+	revalidateTag(inviteTag(hashToken(parsed.data.token)), { expire: 0 })
 
 	return { ok: true }
 }
