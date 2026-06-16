@@ -75,7 +75,7 @@ export default async function Image({
 						}}
 					>
 						<span>{name1}</span>
-						<span style={{ color: '#A89D91', fontSize: 64 }}>&</span>
+						<span style={{ color: '#000', fontSize: 64 }}>&</span>
 						<span>{name2}</span>
 					</div>
 					<div
@@ -84,13 +84,14 @@ export default async function Image({
 							fontSize: 42,
 							fontWeight: 400,
 							letterSpacing: 10,
-							color: '#6F6258',
+							background: '#FFFF',
+							color: '#000',
 						}}
 					>
 						{date}
 					</div>
-					<div style={{ width: 90, height: 1, backgroundColor: '#D8D1C5', margin: '30px 0' }} />
-					<div style={{ fontSize: 44, fontWeight: 400, color: '#4A423B' }}>{headline}</div>
+					<div style={{ width: 190, height: 1, backgroundColor: '#A89D91', margin: '30px 0' }} />
+					<div style={{ fontSize: 44, fontWeight: 400, color: '#000' }}>{headline}</div>
 				</div>
 			</div>
 		),
