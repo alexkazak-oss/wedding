@@ -8,6 +8,13 @@ import { notFound } from 'next/navigation'
 import '../globals.css'
 
 export const metadata: Metadata = {
+	// База для абсолютных URL в og:image и пр. (Vercel-домен или локалка).
+	metadataBase: new URL(
+		process.env.NEXT_PUBLIC_SITE_URL ??
+			(process.env.VERCEL_PROJECT_PRODUCTION_URL
+				? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+				: 'http://localhost:3000'),
+	),
 	title: 'Владислава и Александр · 08.09.2026',
 	description: 'Мы женимся! Приглашаем Вас на нашу свадьбу 8 сентября 2026',
 }

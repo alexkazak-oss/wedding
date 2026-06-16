@@ -11,8 +11,43 @@ import { RsvpForm } from '@/components/invite/rsvp-form'
 import { InvitationCard } from '@/components/layout/invitation-card'
 import { SectionDivider } from '@/components/ui/section-divider'
 import { openInviteByToken } from '@/lib/actions/invite'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+
+// Link preview (Open Graph) для конкретного приглашения. Язык заголовка и
+// описания — из поля locale приглашения (выбор при заполнении в админке),
+// с откатом на локаль из URL, если токен не найден. Сама картинка превью
+// (с логотипом icon.png) генерится в opengraph-image.tsx этого же сегмента.
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ locale: string; token: string }>
+}): Promise<Metadata> {
+	const { locale, token } = await params
+	const result = await openInviteByToken(token)
+	const lng = result.state === 'ok' ? result.invite.locale : locale === 'it' ? 'it' : 'ru'
+
+	const t = await getTranslations({ locale: lng, namespace: 'meta' })
+	const title = t('title')
+	const description = t('description')
+
+	return {
+		title,
+		description,
+		openGraph: {
+			title,
+			description,
+			type: 'website',
+			locale: lng === 'it' ? 'it_IT' : 'ru_RU',
+		},
+		twitter: {
+			card: 'summary_large_image',
+			title,
+			description,
+		},
+	}
+}
 
 // Страница кэшируется (Data Cache + полный кэш маршрута по токену), поэтому
 // 500 заходов обслуживаются без обращений к БД. Свежесть данных обеспечивает
