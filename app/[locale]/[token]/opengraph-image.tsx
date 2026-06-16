@@ -49,6 +49,8 @@ export default async function Image({
 					height: '100%',
 					display: 'flex',
 					padding: 40,
+					// Белый фон, чтобы белая подложка логотипа icon.png сливалась с картинкой.
+					backgroundColor: '#FFFFFF',
 					fontFamily: 'Cormorant',
 				}}
 			>
@@ -70,7 +72,6 @@ export default async function Image({
 							marginTop: 28,
 							fontSize: 88,
 							fontWeight: 600,
-							background: '#FFFF',
 							color: '#16130F',
 						}}
 					>
@@ -84,7 +85,6 @@ export default async function Image({
 							fontSize: 42,
 							fontWeight: 400,
 							letterSpacing: 10,
-							background: '#FFFF',
 							color: '#000',
 						}}
 					>
