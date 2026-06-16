@@ -49,7 +49,6 @@ export default async function Image({
 					height: '100%',
 					display: 'flex',
 					padding: 40,
-					backgroundColor: '#F5F1EA',
 					fontFamily: 'Cormorant',
 				}}
 			>
@@ -60,8 +59,6 @@ export default async function Image({
 						flexDirection: 'column',
 						alignItems: 'center',
 						justifyContent: 'center',
-						border: '2px solid #D8D1C5',
-						borderRadius: 10,
 					}}
 				>
 					<img src={iconSrc} width={190} height={170} alt="" />
