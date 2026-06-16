@@ -70,6 +70,7 @@ export default async function Image({
 							marginTop: 28,
 							fontSize: 88,
 							fontWeight: 600,
+							background: '#FFFF',
 							color: '#16130F',
 						}}
 					>
