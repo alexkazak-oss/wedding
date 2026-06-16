@@ -1,3 +1,4 @@
+import { InviteNamesCell as InviteNamesCell_c62d6777b42b039ede9c3c41c7de179c } from '@/components/payload/invite-names-cell'
 import { CopyLinkCell as CopyLinkCell_773643363353284ce8b0b73bac712bc5 } from '@/components/payload/copy-invite-link'
 import { CopyLinkField as CopyLinkField_773643363353284ce8b0b73bac712bc5 } from '@/components/payload/copy-invite-link'
 import { InvitesReport as InvitesReport_16b940660e9fb71e6ff3659ad0a72796 } from '@/components/payload/invites-report'
@@ -5,6 +6,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/components/payload/invite-names-cell#InviteNamesCell": InviteNamesCell_c62d6777b42b039ede9c3c41c7de179c,
   "@/components/payload/copy-invite-link#CopyLinkCell": CopyLinkCell_773643363353284ce8b0b73bac712bc5,
   "@/components/payload/copy-invite-link#CopyLinkField": CopyLinkField_773643363353284ce8b0b73bac712bc5,
   "@/components/payload/invites-report#InvitesReport": InvitesReport_16b940660e9fb71e6ff3659ad0a72796,

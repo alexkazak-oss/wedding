@@ -142,12 +142,8 @@ export async function InvitesReport() {
 			}}
 		>
 			<div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-				<h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--theme-text, #fff)' }}>
-					Отчёт по гостям
-				</h3>
-				<span style={{ fontSize: 12, color: 'var(--theme-elevation-500, #777)' }}>
-					{totalInvites} приглашений · {totalPeople} гостей · данные живые (RSVP)
-				</span>
+				
+				
 			</div>
 
 			<div

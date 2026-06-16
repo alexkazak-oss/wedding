@@ -3,7 +3,7 @@
 import type { AlcoholOption, SaveRsvpInput } from '@/lib/actions/invite'
 import { saveRsvp } from '@/lib/actions/invite'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Locale = 'ru' | 'it'
@@ -12,6 +12,8 @@ type Transport = 'borisov' | 'minsk' | 'none'
 export interface RsvpFormProps {
 	token: string
 	locale: Locale
+	// Анкета уже отправлена ранее — открываем форму сразу «замороженной».
+	submitted?: boolean
 	initial: {
 		attending: Attending | null
 		transport: Transport | null
@@ -85,7 +87,7 @@ const ALCOHOL_ORDER: AlcoholOption[] = ['sparkling', 'white', 'red', 'vodka', 'w
 const TRANSPORT_ORDER: Transport[] = ['borisov', 'minsk', 'none']
 const ATTENDING_ORDER: Attending[] = ['yes', 'maybe', 'no']
 
-export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
+export function RsvpForm({ token, locale, submitted = false, initial }: RsvpFormProps) {
 	const t = COPY[locale] ?? COPY.ru
 	const router = useRouter()
 
@@ -95,7 +97,18 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 	const [alcohol, setAlcohol] = useState<AlcoholOption[]>(initial.alcohol ?? [])
 	const [error, setError] = useState<string | null>(null)
 	const [saved, setSaved] = useState(false)
+	// Заморозка: после сохранения форма блокируется, чтобы случайно не изменить
+	// ответы. Если анкета уже была отправлена ранее — стартуем сразу замороженными.
+	const [locked, setLocked] = useState(submitted)
 	const [pending, startTransition] = useTransition()
+
+	// «Сохранено ✓» показываем временно внутри кнопки, затем она становится
+	// «Изменить». Таймер сбрасываем при размонтировании/повторном сохранении.
+	useEffect(() => {
+		if (!saved) return
+		const id = setTimeout(() => setSaved(false), 1600)
+		return () => clearTimeout(id)
+	}, [saved])
 
 	// Остальные вопросы показываем, только если гость придёт или ответит позже.
 	// При «не смогу прийти» анкета заканчивается на первом вопросе.
@@ -118,19 +131,41 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 		})
 	}
 
-	function handleSubmit(e: React.FormEvent) {
-		e.preventDefault()
+	function runSave() {
+		if (locked || pending) return
 		setError(null)
 		const payload: SaveRsvpInput = { token, attending, transport, allergies: allergies.trim() || null, alcohol }
 		startTransition(async () => {
 			const res = await saveRsvp(payload)
 			if (res.ok) {
 				setSaved(true)
+				setLocked(true) // замораживаем форму после успешного сохранения
 				router.refresh()
 			} else {
 				setError(res.error)
 			}
 		})
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault()
+		runSave()
+	}
+
+	// Разморозка по «Изменить ответы» — снова даём редактировать.
+	function handleEdit() {
+		setLocked(false)
+		setSaved(false)
+		setError(null)
+	}
+
+	// Единая кнопка действия. Всегда type="button" (не "submit"), поэтому
+	// смена состояния в обработчике не вызывает случайной отправки формы.
+	// Во время «Сохраняем…» и вспышки «Сохранено ✓» клики игнорируем.
+	function handleAction() {
+		if (pending || saved) return
+		if (locked) handleEdit()
+		else runSave()
 	}
 
 	const radioRow = (active: boolean, label: string, onClick: () => void) => (
@@ -185,6 +220,15 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 			</div>
 
 			<form onSubmit={handleSubmit} className="max-w-md mx-auto">
+				{/* Заморозка: disabled выключает все поля внутри (нельзя случайно
+				    изменить), opacity даёт плавное «потускнение». Кнопка действия
+				    лежит вне fieldset — остаётся кликабельной. */}
+				<fieldset
+					disabled={locked}
+					className={`m-0 min-w-0 border-0 p-0 transition-opacity duration-500 ${
+						locked ? 'opacity-60' : 'opacity-100'
+					}`}
+				>
 				{/* Q1 */}
 				<div>
 					<span className={labelCls}>{t.q1}</span>
@@ -268,6 +312,7 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 						</motion.div>
 					)}
 				</AnimatePresence>
+				</fieldset>
 
 				{/* Постоянный отступ сверху (mt-9): не зависит от наличия блока
 				    деталей, поэтому при его удалении из DOM кнопка не дёргается. */}
@@ -275,16 +320,35 @@ export function RsvpForm({ token, locale, initial }: RsvpFormProps) {
 					{error && <p className="text-xs text-red-700/80 font-sans">{error}</p>}
 
 					<div className="flex items-center gap-4">
-						<button
-							type="submit"
+						{/* Одна кнопка плавно перетекает Сохранить → Сохраняем… →
+						    Сохранено ✓ → Изменить: цвет/контур морфятся CSS-транзишеном,
+						    подпись — кроссфейдом через AnimatePresence, ширина — layout.
+						    «Сохранено ✓» держится временно (см. useEffect выше). */}
+						<motion.button
+							layout
+							type="button"
+							onClick={handleAction}
 							disabled={pending}
-							className="px-8 py-3 bg-ink/70 rounded-sm text-cream uppercase text-xs tracking-[0.18em] font-sans hover:bg-ink-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							transition={{ layout: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } }}
+							className={`relative overflow-hidden rounded-sm px-8 py-3 uppercase text-xs tracking-[0.18em] font-sans border transition-colors duration-500 disabled:cursor-not-allowed ${
+								locked
+									? 'border-ink/40 bg-transparent text-ink hover:bg-ink/5'
+									: 'border-transparent bg-ink/70 text-cream hover:bg-ink-light disabled:opacity-50'
+							}`}
 						>
-							{pending ? t.saving : saved ? t.saved : t.save}
-						</button>
-						{saved && !pending && (
-							<span className="text-sm text-ink-light font-sans">{t.edit}</span>
-						)}
+							<AnimatePresence mode="wait" initial={false}>
+								<motion.span
+									key={pending ? 'saving' : saved ? 'saved' : locked ? 'edit' : 'save'}
+									initial={{ opacity: 0, y: 8 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -8 }}
+									transition={{ duration: 0.2 }}
+									className="block whitespace-nowrap"
+								>
+									{pending ? t.saving : saved ? t.saved : locked ? t.edit : t.save}
+								</motion.span>
+							</AnimatePresence>
+						</motion.button>
 					</div>
 				</div>
 			</form>

@@ -171,7 +171,13 @@ export const Invites: CollectionConfig = {
 							type: 'text',
 							required: true,
 							label: 'Имена для списка',
-							admin: { description: 'Как гость отображается в админке' },
+							admin: {
+								description: 'Как гость отображается в админке',
+								// В списке под этим заголовком показываем личности приглашения.
+								components: {
+									Cell: '@/components/payload/invite-names-cell#InviteNamesCell',
+								},
+							},
 						},
 						{
 							name: 'locale',

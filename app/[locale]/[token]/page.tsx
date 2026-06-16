@@ -57,6 +57,7 @@ export default async function InvitePage({
 			<RsvpForm
 				token={token}
 				locale={locale === 'it' ? 'it' : 'ru'}
+				submitted={Boolean(invite.rsvpSubmittedAt)}
 				initial={{
 					attending: invite.attending ?? null,
 					transport: invite.transport ?? null,
