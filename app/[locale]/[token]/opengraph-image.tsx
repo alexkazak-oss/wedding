@@ -34,7 +34,6 @@ export default async function Image({
 	const iconData = await readFile(join(process.cwd(), 'app/icon.png'))
 	const iconSrc = `data:image/png;base64,${iconData.toString('base64')}`
 
-	// Подмножество кириллицы/латиницы под фактический текст картинки.
 	const glyphs = `${name1}${name2}${date}${headline}& `
 	const [serif600, serif400] = await Promise.all([
 		loadGoogleFont('Cormorant Garamond', 600, glyphs),
@@ -49,7 +48,6 @@ export default async function Image({
 					height: '100%',
 					display: 'flex',
 					padding: 40,
-					// Белый фон, чтобы белая подложка логотипа icon.png сливалась с картинкой.
 					backgroundColor: '#FFFFFF',
 					fontFamily: 'Cormorant',
 				}}

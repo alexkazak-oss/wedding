@@ -132,7 +132,7 @@ export const Invites: CollectionConfig = {
 		useAsTitle: 'displayNames',
 		defaultColumns: ['displayNames', 'inviteUrl', 'locale', 'rsvpStatus', 'createdAt'],
 		description:
-			'Персональные приглашения. На первом открытии данные замораживаются в snapshot.',
+			'Персональные приглашения',
 		components: {
 			// Сводный отчёт по гостям над списком приглашений.
 			beforeListTable: ['@/components/payload/invites-report#InvitesReport'],
@@ -163,14 +163,14 @@ export const Invites: CollectionConfig = {
 							name: 'greeting',
 							type: 'text',
 							required: true,
-							label: 'Обращение',
-							admin: { description: 'Например: «Дорогой Виктор!» или «Дорогие Алла и Виктор!»' },
+							label: 'Обращение (Видно на сайте)',
+							admin: { description: 'Например: «Дорогой Имя!» или «Дорогие Имя и Имя!»' },
 						},
 						{
 							name: 'displayNames',
 							type: 'text',
 							required: true,
-							label: 'Имена для списка',
+							label: 'Название приглашения',
 							admin: {
 								description: 'Как гость отображается в админке',
 								// В списке под этим заголовком показываем личности приглашения.
@@ -198,29 +198,7 @@ export const Invites: CollectionConfig = {
 							max: 20,
 							label: 'Сколько гостей в приглашении',
 						},
-						{
-							type: 'row',
-							fields: [
-								{
-									name: 'email',
-									type: 'email',
-									label: 'E-mail для отправки',
-									admin: {
-										width: '50%',
-										description: 'Куда отправить приглашение (необязательно)',
-									},
-								},
-								{
-									name: 'phone',
-									type: 'text',
-									label: 'Телефон для отправки',
-									admin: {
-										width: '50%',
-										description: 'WhatsApp / Telegram / SMS (необязательно)',
-									},
-								},
-							],
-						},
+						
 						{
 							name: 'inviteUrl',
 							type: 'text',
